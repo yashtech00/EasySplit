@@ -1,0 +1,962 @@
+{
+	"info": {
+		"_postman_id": "spliteasy-api-v1",
+		"name": "SplitEasy API v1.0",
+		"description": "Complete API collection for SplitEasy - Expense Splitting Application with UPI Integration\n\n## Base URL\nDevelopment: http://localhost:8000\n\n## Authentication\nMost endpoints require Bearer token authentication. Use the access token received from login.\n\n## Environment Variables\n- base_url: API base URL\n- access_token: JWT access token\n- refresh_token: JWT refresh token\n- user_id: Current user ID\n- group_id: Test group ID\n- expense_id: Test expense ID",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "send-otp"]
+						},
+						"description": "Send OTP to mobile number. Rate limited to 5 requests per 15 minutes per IP."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"OTP sent successfully\",\n  \"data\": null\n}"
+						},
+						{
+							"name": "❌ Invalid Mobile",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\"\n}"
+						},
+						{
+							"name": "⏱️ Rate Limited",
+							"status": "Too Many Requests",
+							"code": 429,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Too many OTP requests, please try again later\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Verify OTP & Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+									"    pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+									"    pm.environment.set(\"user_id\", jsonData.data.user.id);",
+									"    console.log(\"✅ Tokens saved to environment\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "verify-otp"]
+						},
+						"description": "Verify OTP and login/register user. Returns JWT tokens."
+					},
+					"response": [
+						{
+							"name": "✅ New User",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"cm5abc123xyz\",\n      \"mobile\": \"9876543210\",\n      \"name\": null,\n      \"upiId\": null,\n      \"expoPushToken\": null,\n      \"isNewUser\": true\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTVhYmMxMjN4eXoiLCJpYXQiOjE3MDUzMjAwMDAsImV4cCI6MTcwNTMyMDkwMH0.signature\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTVhYmMxMjN4eXoiLCJpYXQiOjE3MDUzMjAwMDAsImV4cCI6MTcwNzkxMjAwMH0.signature\"\n  }\n}"
+						},
+						{
+							"name": "✅ Existing User",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"cm5abc123xyz\",\n      \"mobile\": \"9876543210\",\n      \"name\": \"Rahul Sharma\",\n      \"upiId\": \"rahul@paytm\",\n      \"expoPushToken\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\",\n      \"isNewUser\": false\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+						},
+						{
+							"name": "❌ Invalid OTP",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Invalid or expired OTP\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Complete Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rahul Sharma\",\n  \"upiId\": \"rahul@paytm\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/complete-profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "complete-profile"]
+						},
+						"description": "Complete user profile after registration. Name is required, UPI ID is optional."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"id\": \"cm5abc123xyz\",\n    \"mobile\": \"9876543210\",\n    \"name\": \"Rahul Sharma\",\n    \"upiId\": \"rahul@paytm\",\n    \"expoPushToken\": null\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Get new access token using refresh token."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "logout"]
+						},
+						"description": "Logout from current device."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\",\n  \"data\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout All Devices",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout-all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "logout-all"]
+						},
+						"description": "Logout from all devices."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Logged out from all devices\",\n  \"data\": null\n}"
+						}
+					]
+				}
+			],
+			"description": "Authentication endpoints for OTP-based login/registration"
+		}
+,
+		{
+			"name": "👤 User Profile",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user", "me"]
+						},
+						"description": "Get current user profile."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"User profile retrieved\",\n  \"data\": {\n    \"id\": \"cm5abc123xyz\",\n    \"mobile\": \"9876543210\",\n    \"name\": \"Rahul Sharma\",\n    \"upiId\": \"rahul@paytm\",\n    \"expoPushToken\": \"ExponentPushToken[xxx]\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Rahul Kumar\",\n  \"upiId\": \"rahulkumar@paytm\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user", "profile"]
+						},
+						"description": "Update user name and/or UPI ID."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"id\": \"cm5abc123xyz\",\n    \"mobile\": \"9876543210\",\n    \"name\": \"Rahul Kumar\",\n    \"upiId\": \"rahulkumar@paytm\",\n    \"expoPushToken\": \"ExponentPushToken[xxx]\",\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Push Token",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"expoPushToken\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/push-token",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user", "push-token"]
+						},
+						"description": "Update Expo push notification token for mobile app."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Push token updated successfully\",\n  \"data\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Get User Statistics",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user", "stats"]
+						},
+						"description": "Get user statistics including total groups, expenses, and balances."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"User statistics retrieved\",\n  \"data\": {\n    \"totalGroups\": 3,\n    \"totalExpenses\": 15,\n    \"totalAmount\": 4500.50,\n    \"youOwe\": 250.00,\n    \"theyOwe\": 180.00\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/user/account",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "user", "account"]
+						},
+						"description": "Delete user account. Cannot delete if there are active unpaid expenses."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Account deleted successfully\",\n  \"data\": null\n}"
+						},
+						{
+							"name": "❌ Has Active Expenses",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Cannot delete account with active expenses\"\n}"
+						}
+					]
+				}
+			],
+			"description": "User profile management endpoints"
+		},
+		{
+			"name": "👥 Groups",
+			"item": [
+				{
+					"name": "Create Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"group_id\", jsonData.data.id);",
+									"    pm.environment.set(\"invite_code\", jsonData.data.inviteCode);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Goa Trip 2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/group",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "group"]
+						},
+						"description": "Create a new group. Returns invite code for others to join."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Group created successfully\",\n  \"data\": {\n    \"id\": \"cm5grp123xyz\",\n    \"name\": \"Goa Trip 2024\",\n    \"inviteCode\": \"GRP-A1B2\",\n    \"createdAt\": \"2024-01-20T14:30:00.000Z\",\n    \"members\": [\n      {\n        \"id\": \"cm5mem123\",\n        \"userId\": \"cm5abc123xyz\",\n        \"groupId\": \"cm5grp123xyz\",\n        \"joinedAt\": \"2024-01-20T14:30:00.000Z\",\n        \"user\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\",\n          \"mobile\": \"9876543210\"\n        }\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Join Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"inviteCode\": \"GRP-A1B2\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/group/join",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "group", "join"]
+						},
+						"description": "Join an existing group using invite code. Maximum 2 members per group."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Joined group successfully\",\n  \"data\": {\n    \"id\": \"cm5grp123xyz\",\n    \"name\": \"Goa Trip 2024\",\n    \"inviteCode\": \"GRP-A1B2\",\n    \"createdAt\": \"2024-01-20T14:30:00.000Z\",\n    \"members\": [\n      {\n        \"id\": \"cm5mem123\",\n        \"userId\": \"cm5abc123xyz\",\n        \"user\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\",\n          \"mobile\": \"9876543210\",\n          \"upiId\": \"rahul@paytm\"\n        }\n      },\n      {\n        \"id\": \"cm5mem456\",\n        \"userId\": \"cm5def456xyz\",\n        \"user\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\",\n          \"mobile\": \"9123456789\",\n          \"upiId\": \"priya@phonepe\"\n        }\n      }\n    ]\n  }\n}"
+						},
+						{
+							"name": "❌ Group Full",
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Group is already full (maximum 2 members)\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Group Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/group/{{group_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "group", "{{group_id}}"]
+						},
+						"description": "Get group details including members."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Group details retrieved\",\n  \"data\": {\n    \"id\": \"cm5grp123xyz\",\n    \"name\": \"Goa Trip 2024\",\n    \"inviteCode\": \"GRP-A1B2\",\n    \"createdAt\": \"2024-01-20T14:30:00.000Z\",\n    \"members\": [\n      {\n        \"id\": \"cm5mem123\",\n        \"userId\": \"cm5abc123xyz\",\n        \"user\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\",\n          \"mobile\": \"9876543210\",\n          \"upiId\": \"rahul@paytm\"\n        }\n      },\n      {\n        \"id\": \"cm5mem456\",\n        \"userId\": \"cm5def456xyz\",\n        \"user\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\",\n          \"mobile\": \"9123456789\",\n          \"upiId\": \"priya@phonepe\"\n        }\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Group Balance",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/group/{{group_id}}/balance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "group", "{{group_id}}", "balance"]
+						},
+						"description": "Get group balance showing who owes whom."
+					},
+					"response": [
+						{
+							"name": "✅ They Owe You",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Group balance retrieved\",\n  \"data\": {\n    \"totalGroupSpend\": 5000.00,\n    \"yourShare\": 2500.00,\n    \"theirShare\": 2500.00,\n    \"netBalance\": {\n      \"direction\": \"THEY_OWE_YOU\",\n      \"amount\": 350.00,\n      \"person\": {\n        \"id\": \"cm5def456xyz\",\n        \"name\": \"Priya Singh\"\n      }\n    }\n  }\n}"
+						},
+						{
+							"name": "✅ You Owe Them",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Group balance retrieved\",\n  \"data\": {\n    \"totalGroupSpend\": 5000.00,\n    \"yourShare\": 2500.00,\n    \"theirShare\": 2500.00,\n    \"netBalance\": {\n      \"direction\": \"YOU_OWE_THEM\",\n      \"amount\": 450.00,\n      \"person\": {\n        \"id\": \"cm5def456xyz\",\n        \"name\": \"Priya Singh\"\n      }\n    }\n  }\n}"
+						},
+						{
+							"name": "✅ Settled",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Group balance retrieved\",\n  \"data\": {\n    \"totalGroupSpend\": 5000.00,\n    \"yourShare\": 2500.00,\n    \"theirShare\": 2500.00,\n    \"netBalance\": {\n      \"direction\": \"SETTLED\",\n      \"amount\": 0,\n      \"person\": null\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Send Payment Reminder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"targetUserId\": \"cm5def456xyz\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/group/{{group_id}}/remind",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "group", "{{group_id}}", "remind"]
+						},
+						"description": "Send payment reminder to group member. Limited to once per 24 hours."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reminder sent successfully\",\n  \"data\": null\n}"
+						},
+						{
+							"name": "❌ Already Sent",
+							"status": "Too Many Requests",
+							"code": 429,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Reminder already sent in the last 24 hours\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Group management endpoints"
+		}
+,
+		{
+			"name": "💰 Expenses",
+			"item": [
+				{
+					"name": "Add Expense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"expense_id\", jsonData.data.id);",
+									"    pm.environment.set(\"share_id\", jsonData.data.shares[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"groupId\": \"{{group_id}}\",\n  \"title\": \"Hotel Booking\",\n  \"amount\": 3500.00,\n  \"description\": \"3 nights stay at Beach Resort\",\n  \"date\": \"2024-01-25T00:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/expense",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "expense"]
+						},
+						"description": "Add a new expense to a group. Amount is split equally between members."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Expense added successfully\",\n  \"data\": {\n    \"id\": \"cm5exp123xyz\",\n    \"groupId\": \"cm5grp123xyz\",\n    \"addedById\": \"cm5abc123xyz\",\n    \"title\": \"Hotel Booking\",\n    \"description\": \"3 nights stay at Beach Resort\",\n    \"amount\": 3500.00,\n    \"date\": \"2024-01-25T00:00:00.000Z\",\n    \"createdAt\": \"2024-01-20T15:00:00.000Z\",\n    \"addedBy\": {\n      \"id\": \"cm5abc123xyz\",\n      \"name\": \"Rahul Sharma\"\n    },\n    \"shares\": [\n      {\n        \"id\": \"cm5shr123\",\n        \"expenseId\": \"cm5exp123xyz\",\n        \"userId\": \"cm5abc123xyz\",\n        \"shareAmount\": 1750.00,\n        \"isPaid\": true,\n        \"paidAt\": \"2024-01-20T15:00:00.000Z\",\n        \"user\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\"\n        }\n      },\n      {\n        \"id\": \"cm5shr456\",\n        \"expenseId\": \"cm5exp123xyz\",\n        \"userId\": \"cm5def456xyz\",\n        \"shareAmount\": 1750.00,\n        \"isPaid\": false,\n        \"paidAt\": null,\n        \"user\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\"\n        }\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Group Expenses",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/expense/group/{{group_id}}?page=1&limit=20&status=all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "expense", "group", "{{group_id}}"],
+							"query": [
+								{"key": "page", "value": "1", "description": "Page number"},
+								{"key": "limit", "value": "20", "description": "Items per page"},
+								{"key": "status", "value": "all", "description": "Filter: all, paid, unpaid"}
+							]
+						},
+						"description": "Get all expenses for a group with pagination and filtering."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Expenses retrieved successfully\",\n  \"data\": {\n    \"expenses\": [\n      {\n        \"id\": \"cm5exp123xyz\",\n        \"title\": \"Hotel Booking\",\n        \"amount\": 3500.00,\n        \"description\": \"3 nights stay at Beach Resort\",\n        \"date\": \"2024-01-25T00:00:00.000Z\",\n        \"createdAt\": \"2024-01-20T15:00:00.000Z\",\n        \"addedBy\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\"\n        },\n        \"myShare\": {\n          \"id\": \"cm5shr456\",\n          \"shareAmount\": 1750.00,\n          \"isPaid\": false,\n          \"paidAt\": null\n        },\n        \"isSettled\": false\n      },\n      {\n        \"id\": \"cm5exp789xyz\",\n        \"title\": \"Dinner at Restaurant\",\n        \"amount\": 1200.00,\n        \"description\": \"Seafood dinner\",\n        \"date\": \"2024-01-24T00:00:00.000Z\",\n        \"createdAt\": \"2024-01-19T20:00:00.000Z\",\n        \"addedBy\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\"\n        },\n        \"myShare\": {\n          \"id\": \"cm5shr789\",\n          \"shareAmount\": 600.00,\n          \"isPaid\": true,\n          \"paidAt\": \"2024-01-19T21:00:00.000Z\"\n        },\n        \"isSettled\": true\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 20,\n      \"total\": 2,\n      \"totalPages\": 1\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Expense Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/expense/{{expense_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "expense", "{{expense_id}}"]
+						},
+						"description": "Get detailed information about a specific expense."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Expense details retrieved\",\n  \"data\": {\n    \"id\": \"cm5exp123xyz\",\n    \"groupId\": \"cm5grp123xyz\",\n    \"addedById\": \"cm5abc123xyz\",\n    \"title\": \"Hotel Booking\",\n    \"description\": \"3 nights stay at Beach Resort\",\n    \"amount\": 3500.00,\n    \"date\": \"2024-01-25T00:00:00.000Z\",\n    \"createdAt\": \"2024-01-20T15:00:00.000Z\",\n    \"addedBy\": {\n      \"id\": \"cm5abc123xyz\",\n      \"name\": \"Rahul Sharma\"\n    },\n    \"shares\": [\n      {\n        \"id\": \"cm5shr123\",\n        \"expenseId\": \"cm5exp123xyz\",\n        \"userId\": \"cm5abc123xyz\",\n        \"shareAmount\": 1750.00,\n        \"isPaid\": true,\n        \"paidAt\": \"2024-01-20T15:00:00.000Z\",\n        \"user\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\"\n        },\n        \"payment\": null\n      },\n      {\n        \"id\": \"cm5shr456\",\n        \"expenseId\": \"cm5exp123xyz\",\n        \"userId\": \"cm5def456xyz\",\n        \"shareAmount\": 1750.00,\n        \"isPaid\": false,\n        \"paidAt\": null,\n        \"user\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\"\n        },\n        \"payment\": null\n      }\n    ],\n    \"group\": {\n      \"id\": \"cm5grp123xyz\",\n      \"name\": \"Goa Trip 2024\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Expense",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"3 nights stay at Beach Resort - Updated\",\n  \"date\": \"2024-01-26T00:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/expense/{{expense_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "expense", "{{expense_id}}"]
+						},
+						"description": "Update expense description and/or date. Only the person who added the expense can update it."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Expense updated successfully\",\n  \"data\": {\n    \"id\": \"cm5exp123xyz\",\n    \"groupId\": \"cm5grp123xyz\",\n    \"addedById\": \"cm5abc123xyz\",\n    \"title\": \"Hotel Booking\",\n    \"description\": \"3 nights stay at Beach Resort - Updated\",\n    \"amount\": 3500.00,\n    \"date\": \"2024-01-26T00:00:00.000Z\",\n    \"createdAt\": \"2024-01-20T15:00:00.000Z\",\n    \"addedBy\": {\n      \"id\": \"cm5abc123xyz\",\n      \"name\": \"Rahul Sharma\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Expense",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/expense/{{expense_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "expense", "{{expense_id}}"]
+						},
+						"description": "Delete an expense. Only the person who added it can delete. Cannot delete if others have paid."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Expense deleted successfully\",\n  \"data\": null\n}"
+						},
+						{
+							"name": "❌ Has Payments",
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": false,\n  \"message\": \"Cannot delete expense with payments from other users\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Expense management endpoints"
+		},
+		{
+			"name": "💳 Payments",
+			"item": [
+				{
+					"name": "Initiate Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"payment_id\", jsonData.data.paymentId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"shareId\": \"{{share_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment/initiate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payment", "initiate"]
+						},
+						"description": "Initiate payment for an expense share. Returns UPI deep links for payment apps."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Payment initiated successfully\",\n  \"data\": {\n    \"paymentId\": \"cm5pay123xyz\",\n    \"shareAmount\": 1750.00,\n    \"payee\": {\n      \"id\": \"cm5abc123xyz\",\n      \"name\": \"Rahul Sharma\",\n      \"upiId\": \"rahul@paytm\"\n    },\n    \"upiLinks\": {\n      \"gpay\": \"gpay://upi/pay?pa=rahul@paytm&pn=Rahul%20Sharma&am=1750.00&tn=Hotel%20Booking%20-%20SplitEasy&tr=splitEasy_cm5shr456\",\n      \"phonepe\": \"phonepe://pay?pa=rahul@paytm&pn=Rahul%20Sharma&am=1750.00&tn=Hotel%20Booking%20-%20SplitEasy&tr=splitEasy_cm5shr456\",\n      \"paytm\": \"paytmmp://pay?pa=rahul@paytm&pn=Rahul%20Sharma&am=1750.00&tn=Hotel%20Booking%20-%20SplitEasy&tr=splitEasy_cm5shr456\",\n      \"bhim\": \"upi://pay?pa=rahul@paytm&pn=Rahul%20Sharma&am=1750.00&tn=Hotel%20Booking%20-%20SplitEasy&tr=splitEasy_cm5shr456\"\n    },\n    \"transactionRef\": \"splitEasy_cm5shr456\",\n    \"expense\": {\n      \"id\": \"cm5exp123xyz\",\n      \"title\": \"Hotel Booking\",\n      \"amount\": 3500.00\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Record UPI App",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"upiApp\": \"gpay\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment/{{payment_id}}/app",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payment", "{{payment_id}}", "app"]
+						},
+						"description": "Record which UPI app user selected. Valid values: gpay, phonepe, paytm, bhim"
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"UPI app recorded successfully\",\n  \"data\": {\n    \"id\": \"cm5pay123xyz\",\n    \"shareId\": \"cm5shr456\",\n    \"payerId\": \"cm5def456xyz\",\n    \"payeeId\": \"cm5abc123xyz\",\n    \"amount\": 1750.00,\n    \"status\": \"INITIATED\",\n    \"upiApp\": \"gpay\",\n    \"initiatedAt\": \"2024-01-20T16:00:00.000Z\",\n    \"confirmedAt\": null\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Confirm Payment",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment/{{payment_id}}/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payment", "{{payment_id}}", "confirm"]
+						},
+						"description": "Confirm payment after returning from UPI app. Status can be CONFIRMED or FAILED."
+					},
+					"response": [
+						{
+							"name": "✅ Confirmed",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Payment confirmed successfully\",\n  \"data\": {\n    \"paymentId\": \"cm5pay123xyz\",\n    \"status\": \"CONFIRMED\",\n    \"paidAt\": \"2024-01-20T16:05:00.000Z\",\n    \"shareId\": \"cm5shr456\"\n  }\n}"
+						},
+						{
+							"name": "✅ Failed",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Payment failed successfully\",\n  \"data\": {\n    \"paymentId\": \"cm5pay123xyz\",\n    \"status\": \"FAILED\",\n    \"paidAt\": null,\n    \"shareId\": \"cm5shr456\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Payment Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment/{{payment_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payment", "{{payment_id}}"]
+						},
+						"description": "Get payment details and status."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Payment details retrieved\",\n  \"data\": {\n    \"id\": \"cm5pay123xyz\",\n    \"shareId\": \"cm5shr456\",\n    \"payerId\": \"cm5def456xyz\",\n    \"payeeId\": \"cm5abc123xyz\",\n    \"amount\": 1750.00,\n    \"status\": \"CONFIRMED\",\n    \"upiApp\": \"gpay\",\n    \"initiatedAt\": \"2024-01-20T16:00:00.000Z\",\n    \"confirmedAt\": \"2024-01-20T16:05:00.000Z\",\n    \"share\": {\n      \"id\": \"cm5shr456\",\n      \"expense\": {\n        \"id\": \"cm5exp123xyz\",\n        \"title\": \"Hotel Booking\",\n        \"amount\": 3500.00\n      }\n    },\n    \"payer\": {\n      \"id\": \"cm5def456xyz\",\n      \"name\": \"Priya Singh\"\n    },\n    \"payee\": {\n      \"id\": \"cm5abc123xyz\",\n      \"name\": \"Rahul Sharma\",\n      \"upiId\": \"rahul@paytm\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Payment History",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment/history/me?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "payment", "history", "me"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						},
+						"description": "Get user's payment history (both sent and received)."
+					},
+					"response": [
+						{
+							"name": "✅ Success",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n  \"success\": true,\n  \"message\": \"Payment history retrieved\",\n  \"data\": {\n    \"payments\": [\n      {\n        \"id\": \"cm5pay123xyz\",\n        \"shareId\": \"cm5shr456\",\n        \"payerId\": \"cm5def456xyz\",\n        \"payeeId\": \"cm5abc123xyz\",\n        \"amount\": 1750.00,\n        \"status\": \"CONFIRMED\",\n        \"upiApp\": \"gpay\",\n        \"initiatedAt\": \"2024-01-20T16:00:00.000Z\",\n        \"confirmedAt\": \"2024-01-20T16:05:00.000Z\",\n        \"share\": {\n          \"expense\": {\n            \"id\": \"cm5exp123xyz\",\n            \"title\": \"Hotel Booking\",\n            \"amount\": 3500.00\n          }\n        },\n        \"payer\": {\n          \"id\": \"cm5def456xyz\",\n          \"name\": \"Priya Singh\"\n        },\n        \"payee\": {\n          \"id\": \"cm5abc123xyz\",\n          \"name\": \"Rahul Sharma\",\n          \"upiId\": \"rahul@paytm\"\n        }\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 20,\n      \"total\": 1,\n      \"totalPages\": 1\n    }\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Payment processing endpoints with UPI integration"
+		},
+		{
+			"name": "🏥 Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": ["{{base_url}}"],
+					"path": ["health"]
+				},
+				"description": "Check API server health status."
+			},
+			"response": [
+				{
+					"name": "✅ Healthy",
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n  \"status\": \"OK\",\n  \"timestamp\": \"2024-01-20T10:30:00.000Z\",\n  \"uptime\": 3600.5,\n  \"environment\": \"development\"\n}"
+				}
+			]
+		},
+		{
+			"name": "📖 API Info",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1"]
+				},
+				"description": "Get API information and available endpoints."
+			},
+			"response": [
+				{
+					"name": "✅ Success",
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"body": "{\n  \"message\": \"SplitEasy API v1\",\n  \"version\": \"1.0.0\",\n  \"endpoints\": {\n    \"auth\": \"/api/v1/auth\",\n    \"user\": \"/api/v1/user\",\n    \"group\": \"/api/v1/group\",\n    \"expense\": \"/api/v1/expense\",\n    \"payment\": \"/api/v1/payment\"\n  },\n  \"documentation\": \"https://your-api-docs.com\"\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "group_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "invite_code",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "expense_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "share_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
