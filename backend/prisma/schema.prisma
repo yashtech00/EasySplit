@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String         @id @default(uuid())
+  mobile          String         @unique
+  name            String?
+  upiId           String?
+  expoPushToken   String?
+  createdAt       DateTime       @default(now())
+  groupMemberships GroupMember[]
+  expensesAdded   Expense[]      @relation("AddedBy")
+  expenseShares   ExpenseShare[]
+  paymentsGiven   Payment[]      @relation("Payer")
+  paymentsReceived Payment[]     @relation("Payee")
+  refreshTokens   RefreshToken[]
+  remindersSent   Reminder[]     @relation("SentBy")
+  remindersReceived Reminder[]   @relation("SentTo")
+}
+
+model OtpRecord {
+  id        String   @id @default(uuid())
+  mobile    String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([mobile])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  name        String
+  inviteCode  String        @unique
+  createdAt   DateTime      @default(now())
+  members     GroupMember[]
+  expenses    Expense[]
+  reminders   Reminder[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime @default(now())
+  group    Group    @relation(fields: [groupId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  @@unique([groupId, userId])
+}
+
+model Expense {
+  id          String         @id @default(uuid())
+  groupId     String
+  addedById   String
+  title       String
+  description String?
+  amount      Float
+  date        DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+  group       Group          @relation(fields: [groupId], references: [id])
+  addedBy     User           @relation("AddedBy", fields: [addedById], references: [id])
+  shares      ExpenseShare[]
+}
+
+model ExpenseShare {
+  id          String    @id @default(uuid())
+  expenseId   String
+  userId      String
+  shareAmount Float
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  expense     Expense   @relation(fields: [expenseId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  payment     Payment?
+  @@unique([expenseId, userId])
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  shareId     String        @unique
+  payerId     String
+  payeeId     String
+  amount      Float
+  upiApp      String?
+  status      PaymentStatus @default(INITIATED)
+  initiatedAt DateTime      @default(now())
+  confirmedAt DateTime?
+  share       ExpenseShare  @relation(fields: [shareId], references: [id])
+  payer       User          @relation("Payer", fields: [payerId], references: [id])
+  payee       User          @relation("Payee", fields: [payeeId], references: [id])
+}
+
+model Reminder {
+  id           String   @id @default(uuid())
+  groupId      String
+  sentByUserId String
+  sentToUserId String
+  sentAt       DateTime @default(now())
+  group        Group    @relation(fields: [groupId], references: [id])
+  sentBy       User     @relation("SentBy", fields: [sentByUserId], references: [id])
+  sentTo       User     @relation("SentTo", fields: [sentToUserId], references: [id])
+}
+
+enum PaymentStatus {
+  INITIATED
+  CONFIRMED
+  FAILED
+}
