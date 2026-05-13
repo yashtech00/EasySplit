@@ -1,14 +1,19 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import dotenv from 'dotenv';
 
-// Create a single Prisma client instance to be shared across the application
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+// Load environment variables
+dotenv.config();
+
+// Create Neon adapter with pooled connection
+const adapter = new PrismaNeon({
+  connectionString: process.env.DATABASE_URL
 });
 
+// Create a single Prisma client instance with the Neon adapter
 export const prisma = new PrismaClient({ 
   adapter,
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error']
 });
 
 // Handle graceful shutdown
