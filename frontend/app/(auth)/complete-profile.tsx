@@ -55,7 +55,7 @@ export default function CompleteProfileScreen() {
             <Input
               flex={1}
               borderWidth={0}
-              placeholder="Anurag"
+              placeholder="John Doe"
               value={name}
               onChangeText={setName}
               backgroundColor="transparent"
@@ -70,7 +70,7 @@ export default function CompleteProfileScreen() {
             <Input
               flex={1}
               borderWidth={0}
-              placeholder="anurag@okaxis"
+              placeholder="johndoe@okaxis"
               value={upiId}
               onChangeText={setUpiId}
               autoCapitalize="none"

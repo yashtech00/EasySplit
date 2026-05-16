@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, Linking, AppState, Image } from 'react-native';
+import { Alert, Linking, AppState, Image, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { YStack, XStack, Text, Button, H1, Spinner, View, Card } from 'tamagui';
 import { ChevronLeft, Smartphone, CheckCircle2, XCircle } from '@tamagui/lucide-icons';
@@ -72,17 +72,84 @@ export default function PaymentScreen() {
   const handleAppSelect = async (appId: string) => {
     try {
       await recordUpiApp(paymentData.paymentId, appId as any);
-      const upiUrl = paymentData.upiLinks[appId] || paymentData.upiLinks.bhim;
-      const canOpen = await Linking.canOpenURL(upiUrl);
       
+      // Determine the best link to use based on platform and availability
+      let upiUrl = '';
+      const { upiLinks } = paymentData;
+
+      if (Platform.OS === 'android') {
+        // Use android specific intent links if available, otherwise fallback to top-level or generic
+        upiUrl = upiLinks.android?.[appId] || upiLinks[appId] || upiLinks.generic;
+      } else if (Platform.OS === 'ios') {
+        // Use ios specific custom schemes if available, otherwise fallback to top-level or generic
+        upiUrl = upiLinks.ios?.[appId] || upiLinks[appId] || upiLinks.generic;
+      } else {
+        // Web or other: Use generic upi link
+        upiUrl = upiLinks.generic;
+      }
+
+      console.log(`Attempting to open UPI link for ${appId}:`, upiUrl);
+
+      // On Android, intent:// links often fail canOpenURL check even if the app is installed.
+      // We try to open directly and catch the error.
+      if (Platform.OS === 'android' && upiUrl.startsWith('intent://')) {
+        setStatus('PENDING');
+        try {
+          await Linking.openURL(upiUrl);
+        } catch (err) {
+          console.error('Failed to open intent link:', err);
+          
+          // Fallback 1: Extract the upi:// part from the intent:// link
+          // intent://pay?...#Intent;scheme=upi;... -> upi://pay?...
+          const intentParts = upiUrl.split('#Intent;');
+          if (intentParts.length > 0) {
+            const rawPath = intentParts[0].replace('intent://', 'upi://');
+            console.log('Fallback 1: Attempting to open extracted upi:// link:', rawPath);
+            try {
+              await Linking.openURL(rawPath);
+              return;
+            } catch (fallbackErr) {
+              console.error('Fallback 1 failed:', fallbackErr);
+            }
+          }
+
+          // Fallback 2: Use generic upi:// link if intent fails
+          if (upiLinks.clean || upiLinks.generic) {
+            const finalFallback = upiLinks.clean || upiLinks.generic;
+            console.log('Fallback 2: Attempting to open clean/generic upi:// link:', finalFallback);
+            try {
+              await Linking.openURL(finalFallback);
+            } catch (finalErr) {
+              console.error('Fallback 2 failed:', finalErr);
+              Alert.alert('Error', `Could not open ${appId}. Please ensure it is installed or use another app.`);
+              setStatus('IDLE');
+            }
+          } else {
+            Alert.alert('Error', `Could not open ${appId}. Please ensure it is installed.`);
+            setStatus('IDLE');
+          }
+        }
+        return;
+      }
+
+      // For standard upi:// or app-specific schemes (gpay://, phonepe://)
+      const canOpen = await Linking.canOpenURL(upiUrl);
       if (canOpen) {
         setStatus('PENDING');
         await Linking.openURL(upiUrl);
       } else {
-        Alert.alert('Error', `${appId} is not installed on your device.`);
+        // Try generic fallback before giving up
+        if (upiUrl !== upiLinks.generic && upiLinks.generic) {
+          setStatus('PENDING');
+          await Linking.openURL(upiLinks.generic);
+        } else {
+          Alert.alert('Error', `${appId} is not installed on your device.`);
+        }
       }
     } catch (error) {
+      console.error('Payment app redirection error:', error);
       Alert.alert('Error', 'Failed to open payment app');
+      setStatus('IDLE');
     }
   };
 

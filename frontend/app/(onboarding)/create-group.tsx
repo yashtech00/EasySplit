@@ -34,13 +34,13 @@ export default function CreateGroupScreen() {
   };
 
   return (
-    <YStack f={1} bc="$background" p="$6" gap="$6">
-      <XStack ai="center" mt="$4" gap="$4">
+    <YStack flex={1} backgroundColor="$background" padding="$6" gap="$6">
+      <XStack alignItems="center" marginTop="$4" gap="$4">
         <Button
           circular
           icon={<ChevronLeft size={24} />}
           onPress={() => router.back()}
-          bc="transparent"
+          backgroundColor="transparent"
         />
         <H1 size="$7">Create Group</H1>
       </XStack>
@@ -50,7 +50,7 @@ export default function CreateGroupScreen() {
           <Label fontWeight="600" color="$gray11">GROUP NAME</Label>
           <Input
             size="$5"
-            placeholder="e.g. Me & Rohan, Roommates"
+            placeholder="e.g. Roommates"
             value={name}
             onChangeText={setName}
             autoFocus

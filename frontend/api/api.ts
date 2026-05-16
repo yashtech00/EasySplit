@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:8000'; // Change to your Railway URL in production
+const BASE_URL = 'https://easysplit-qdjv.onrender.com'; // Change to your Railway URL in production
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/v1`,

@@ -5,17 +5,25 @@
 // Generate UPI deep links for all supported payment apps
 export const generateUpiLinks = ({ payeeUpiId, payeeName, amount, note, ref }) => {
   // Build base parameters
-  const params = new URLSearchParams({
+  const baseParams = {
     pa: payeeUpiId,           // Payee address (UPI ID)
     pn: payeeName,            // Payee name
     am: amount.toFixed(2),    // Amount (2 decimal places)
     cu: 'INR',                // Currency
-    tn: note,                 // Transaction note
+    tn: note                  // Transaction note
+  };
+
+  // Tracking parameters (These can cause "Bank Limit" errors on some banks)
+  const trackingParams = {
+    ...baseParams,
     tr: ref                   // Transaction reference
-  }).toString();
+  };
+
+  const params = new URLSearchParams(trackingParams).toString();
+  const cleanParams = new URLSearchParams(baseParams).toString();
 
   // Generic UPI URI (works on most devices)
-  const generic = `upi://pay?${params}`;
+  const generic = `upi://pay?${cleanParams}`; // Use clean link for generic fallback
 
   // Android intent URLs for specific apps
   const androidIntents = {
@@ -25,19 +33,17 @@ export const generateUpiLinks = ({ payeeUpiId, payeeName, amount, note, ref }) =
     bhim: `intent://pay?${params}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
   };
 
-  // iOS scheme URLs for specific apps
-  const iosSchemes = {
-    gpay: `gpay://upi/pay?${params}`,
-    paytm: `paytmmp://pay?${params}`,
-    phonepe: `phonepe://pay?${params}`,
-    bhim: `bhim://pay?${params}`
-  };
-
   // Return all possible links
   return {
     generic,
+    clean: `upi://pay?${cleanParams}`, // Added a "Clean" P2P link
     android: androidIntents,
-    ios: iosSchemes,
+    ios: {
+      gpay: `gpay://upi/pay?${params}`,
+      paytm: `paytmmp://pay?${params}`,
+      phonepe: `phonepe://pay?${params}`,
+      bhim: `bhim://pay?${params}`
+    },
     // For simplicity, return the most common ones
     gpay: androidIntents.gpay,
     paytm: androidIntents.paytm,
