@@ -64,15 +64,46 @@ const initiatePayment = asyncHandler(async (req, res) => {
       return sendConflict(res, 'This share is already paid');
     }
 
-    // Check if payment already exists
-    if (share.payment) {
-      return sendConflict(res, 'Payment already initiated for this share');
-    }
-
     // Check if payee has UPI ID
     const payee = share.expense.addedBy;
     if (!payee.upiId) {
       return sendError(res, 'Payee has not set up UPI ID', 400);
+    }
+
+    // Check if payment already exists
+    if (share.payment) {
+      // If payment exists but is not paid, return existing payment info
+      const payment = share.payment;
+      
+      const transactionRef = generateTransactionRef(shareId);
+      const note = `${share.expense.title} - SplitEasy`;
+      
+      const upiLinks = generateUpiLinks({
+        payeeUpiId: payee.upiId,
+        payeeName: payee.name,
+        amount: share.shareAmount,
+        note,
+        ref: transactionRef
+      });
+
+      const responseData = {
+        paymentId: payment.id,
+        shareAmount: share.shareAmount,
+        payee: {
+          id: payee.id,
+          name: payee.name,
+          upiId: payee.upiId
+        },
+        upiLinks,
+        transactionRef,
+        expense: {
+          id: share.expense.id,
+          title: share.expense.title,
+          amount: share.expense.amount
+        }
+      };
+
+      return sendSuccess(res, responseData, 200, 'Existing payment session resumed');
     }
 
     // Get payer information

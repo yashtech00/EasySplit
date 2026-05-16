@@ -210,7 +210,8 @@ const getUserStats = asyncHandler(async (req, res) => {
       totalExpenses,
       totalAmount,
       youOwe,
-      theyOwe
+      theyOwe,
+      primaryGroupId: groupIds[0] || null
     };
 
     return sendSuccess(res, stats, 200, 'User statistics retrieved');

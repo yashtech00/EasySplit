@@ -15,6 +15,15 @@ export const completeProfile = async (name: string, upiId?: string) => {
   return res.data.data;
 };
 
-export const logout = async (refreshToken: string) => {
-  await api.post('/auth/logout', { refreshToken });
+export const refreshToken = async (token: string) => {
+  const res = await api.post('/auth/refresh', { refreshToken: token });
+  return res.data.data;
+};
+
+export const logout = async (token: string) => {
+  await api.post('/auth/logout', { refreshToken: token });
+};
+
+export const logoutAll = async () => {
+  await api.post('/auth/logout-all');
 };

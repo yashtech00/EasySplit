@@ -1,16 +1,18 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { LayoutDashboard, Users, ReceiptText, User } from '@tamagui/lucide-icons';
+import { useTheme } from 'tamagui';
 
 export default function TabLayout() {
+  const theme = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textLight,
+        tabBarActiveTintColor: theme.blue10.get(),
+        tabBarInactiveTintColor: theme.gray9.get(),
         tabBarStyle: {
-          backgroundColor: Colors.card,
-          borderTopColor: Colors.border,
+          backgroundColor: theme.background.get(),
+          borderTopColor: theme.gray4.get(),
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
@@ -27,7 +29,7 @@ export default function TabLayout() {
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+            <LayoutDashboard size={size} color={color} />
           ),
         }}
       />
@@ -36,7 +38,7 @@ export default function TabLayout() {
         options={{
           title: 'Groups',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Users size={size} color={color} />
           ),
         }}
       />
@@ -45,7 +47,7 @@ export default function TabLayout() {
         options={{
           title: 'Activity',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" size={size} color={color} />
+            <ReceiptText size={size} color={color} />
           ),
         }}
       />
@@ -54,7 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'Account',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <User size={size} color={color} />
           ),
         }}
       />

@@ -433,10 +433,49 @@ const sendReminder = asyncHandler(async (req, res) => {
   }
 });
 
+// Get user's groups
+const getMyGroups = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const memberships = await prisma.groupMember.findMany({
+      where: { userId },
+      include: {
+        group: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    mobile: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const groups = memberships.map(m => ({
+      ...m.group,
+      membersCount: m.group.members.length
+    }));
+
+    return sendSuccess(res, groups, 200, 'User groups retrieved');
+  } catch (error) {
+    console.error('Error fetching user groups:', error);
+    return sendError(res, 'Failed to fetch user groups', 500);
+  }
+});
+
 export {
   createGroup,
   joinGroup,
   getGroup,
   getBalance,
-  sendReminder
+  sendReminder,
+  getMyGroups
 };

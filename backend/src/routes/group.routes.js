@@ -11,6 +11,9 @@ const router = express.Router();
 // Create a new group
 router.post('/', authenticate, groupController.createGroup);
 
+// Get user's groups
+router.get('/me', authenticate, groupController.getMyGroups);
+
 // Join an existing group using invite code
 router.post('/join', authenticate, groupController.joinGroup);
 

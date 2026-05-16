@@ -5,6 +5,11 @@ export const createGroup = async (name: string) => {
   return res.data.data;
 };
 
+export const getMyGroups = async () => {
+  const res = await api.get('/group/me');
+  return res.data.data;
+};
+
 export const joinGroup = async (inviteCode: string) => {
   const res = await api.post('/group/join', { inviteCode });
   return res.data.data;
