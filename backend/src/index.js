@@ -16,8 +16,14 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: env.isDevelopment ? true : ['https://yourapp.com'], // Configure for production
-  credentials: true
+  origin: env.isDevelopment ? true : env.FRONTEND_URL, // Configure for production
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  maxAge: 86400
 }));
 
 app.use(express.json({ limit: '10mb' }));
