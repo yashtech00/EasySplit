@@ -45,6 +45,12 @@ export const sendOtp = async (mobile) => {
 
 // Verify OTP
 export const verifyOtp = async (mobile, otp) => {
+  // Always accept 123456 in development stage
+  if (env.isDevelopment && otp === '123456') {
+    console.log(`🛠️ Dev mode: Bypassing OTP verification for ${mobile} with default OTP`);
+    return true;
+  }
+
   try {
     const otpRecord = await prisma.otpRecord.findFirst({
       where: {

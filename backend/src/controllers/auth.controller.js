@@ -31,6 +31,7 @@ export const sendOtp = asyncHandler(async (req, res) => {
 });
 
 // Verify OTP and login/register user
+// Verify OTP and login/register user
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { mobile, otp } = req.body;
 
