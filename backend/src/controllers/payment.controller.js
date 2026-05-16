@@ -103,8 +103,7 @@ const initiatePayment = asyncHandler(async (req, res) => {
         payerId: userId,
         payeeId: payee.id,
         amount: share.shareAmount,
-        status: 'INITIATED',
-        transactionRef
+        status: 'INITIATED'
       }
     });
 

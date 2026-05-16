@@ -88,7 +88,7 @@ export default function PaymentScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || !paymentData) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
         <Spinner size="large" color="$blue10" />
