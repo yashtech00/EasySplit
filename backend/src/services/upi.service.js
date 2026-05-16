@@ -4,6 +4,8 @@
 
 // Generate UPI deep links for all supported payment apps
 export const generateUpiLinks = ({ payeeUpiId, payeeName, amount, note, ref }) => {
+  console.log(`🔗 [UPI Service] Generating links for ${payeeUpiId}, Amount: ${amount}, Ref: ${ref}`);
+
   // Build base parameters
   const baseParams = {
     pa: payeeUpiId,           // Payee address (UPI ID)
@@ -33,17 +35,21 @@ export const generateUpiLinks = ({ payeeUpiId, payeeName, amount, note, ref }) =
     bhim: `intent://pay?${params}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
   };
 
+  const iosSchemes = {
+    gpay: `gpay://upi/pay?${params}`,
+    paytm: `paytmmp://pay?${params}`,
+    phonepe: `phonepe://pay?${params}`,
+    bhim: `bhim://pay?${params}`
+  };
+
+  console.log('✅ [UPI Service] Links generated successfully');
+  
   // Return all possible links
   return {
     generic,
     clean: `upi://pay?${cleanParams}`, // Added a "Clean" P2P link
     android: androidIntents,
-    ios: {
-      gpay: `gpay://upi/pay?${params}`,
-      paytm: `paytmmp://pay?${params}`,
-      phonepe: `phonepe://pay?${params}`,
-      bhim: `bhim://pay?${params}`
-    },
+    ios: iosSchemes,
     // For simplicity, return the most common ones
     gpay: androidIntents.gpay,
     paytm: androidIntents.paytm,

@@ -23,10 +23,13 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
+      console.log(`💳 [PaymentScreen] Fetching info for ShareId: ${shareId}`);
       try {
         const data = await initiatePayment(shareId as string);
+        console.log('✅ [PaymentScreen] Payment data received:', JSON.stringify(data, null, 2));
         setPaymentData(data);
       } catch (error: any) {
+        console.error('❌ [PaymentScreen] Initiation failed:', error.response?.data || error.message);
         const message = error.response?.data?.message || 'Failed to initiate payment';
         Alert.alert('Error', message);
         router.back();
@@ -39,8 +42,9 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
+      console.log(`📱 [PaymentScreen] AppState changed to: ${nextAppState}, Status: ${status}`);
       if (nextAppState === 'active' && status === 'PENDING') {
-        // User returned from UPI app
+        console.log('🔄 [PaymentScreen] User returned from payment app, showing dialog');
         showConfirmationDialog();
       }
     });
@@ -52,14 +56,24 @@ export default function PaymentScreen() {
       'Payment Completed?',
       'Did you successfully complete the payment in the UPI app?',
       [
-        { text: 'No, Retry', style: 'cancel', onPress: () => setStatus('IDLE') },
+        { 
+          text: 'No, Retry', 
+          style: 'cancel', 
+          onPress: () => {
+            console.log('🔁 [PaymentScreen] User clicked Retry');
+            setStatus('IDLE');
+          }
+        },
         { 
           text: 'Yes, Paid', 
           onPress: async () => {
+            console.log('💸 [PaymentScreen] User confirmed payment, verifying with backend...');
             try {
               await confirmPayment(paymentData.paymentId, 'CONFIRMED');
+              console.log('✅ [PaymentScreen] Payment confirmed by backend');
               setStatus('SUCCESS');
-            } catch (error) {
+            } catch (error: any) {
+              console.error('❌ [PaymentScreen] Confirmation failed:', error.response?.data || error.message);
               Alert.alert('Error', 'Failed to confirm payment. Please try again.');
               setStatus('IDLE');
             }
@@ -70,84 +84,87 @@ export default function PaymentScreen() {
   };
 
   const handleAppSelect = async (appId: string) => {
+    console.log(`🔘 [PaymentScreen] App selected: ${appId}`);
     try {
+      console.log(`📡 [PaymentScreen] Recording selected app (${appId}) in backend...`);
       await recordUpiApp(paymentData.paymentId, appId as any);
       
-      // Determine the best link to use based on platform and availability
       let upiUrl = '';
       const { upiLinks } = paymentData;
 
       if (Platform.OS === 'android') {
-        // Use android specific intent links if available, otherwise fallback to top-level or generic
         upiUrl = upiLinks.android?.[appId] || upiLinks[appId] || upiLinks.generic;
+        console.log(`🤖 [PaymentScreen] Android path - Selection: ${upiUrl}`);
       } else if (Platform.OS === 'ios') {
-        // Use ios specific custom schemes if available, otherwise fallback to top-level or generic
         upiUrl = upiLinks.ios?.[appId] || upiLinks[appId] || upiLinks.generic;
+        console.log(`🍎 [PaymentScreen] iOS path - Selection: ${upiUrl}`);
       } else {
-        // Web or other: Use generic upi link
         upiUrl = upiLinks.generic;
+        console.log(`🌐 [PaymentScreen] Other path - Selection: ${upiUrl}`);
       }
 
-      console.log(`Attempting to open UPI link for ${appId}:`, upiUrl);
+      // Special handling for the "Bank Limit" error you saw
+      // If we are retrying or the specific app link failed, we use the "clean" link
+      if (status === 'IDLE' && upiLinks.clean) {
+        console.log('🧹 [PaymentScreen] Status was IDLE, using clean link for better limit compatibility');
+        upiUrl = upiLinks.clean;
+      }
 
-      // On Android, intent:// links often fail canOpenURL check even if the app is installed.
-      // We try to open directly and catch the error.
+      console.log(`🚀 [PaymentScreen] Final URI to open: ${upiUrl}`);
+
       if (Platform.OS === 'android' && upiUrl.startsWith('intent://')) {
         setStatus('PENDING');
         try {
+          console.log('⚡ [PaymentScreen] Attempting direct Intent open...');
           await Linking.openURL(upiUrl);
         } catch (err) {
-          console.error('Failed to open intent link:', err);
-          
-          // Fallback 1: Extract the upi:// part from the intent:// link
-          // intent://pay?...#Intent;scheme=upi;... -> upi://pay?...
+          console.warn('⚠️ [PaymentScreen] Intent failed, attempting Fallback 1 (Extracted UPI)...');
           const intentParts = upiUrl.split('#Intent;');
           if (intentParts.length > 0) {
             const rawPath = intentParts[0].replace('intent://', 'upi://');
-            console.log('Fallback 1: Attempting to open extracted upi:// link:', rawPath);
+            console.log(`⚡ [PaymentScreen] Fallback 1 URI: ${rawPath}`);
             try {
               await Linking.openURL(rawPath);
               return;
             } catch (fallbackErr) {
-              console.error('Fallback 1 failed:', fallbackErr);
+              console.error('❌ [PaymentScreen] Fallback 1 failed');
             }
           }
 
-          // Fallback 2: Use generic upi:// link if intent fails
           if (upiLinks.clean || upiLinks.generic) {
             const finalFallback = upiLinks.clean || upiLinks.generic;
-            console.log('Fallback 2: Attempting to open clean/generic upi:// link:', finalFallback);
+            console.log(`⚡ [PaymentScreen] Fallback 2 (Clean/Generic) URI: ${finalFallback}`);
             try {
               await Linking.openURL(finalFallback);
             } catch (finalErr) {
-              console.error('Fallback 2 failed:', finalErr);
+              console.error('❌ [PaymentScreen] Fallback 2 failed');
               Alert.alert('Error', `Could not open ${appId}. Please ensure it is installed or use another app.`);
               setStatus('IDLE');
             }
-          } else {
-            Alert.alert('Error', `Could not open ${appId}. Please ensure it is installed.`);
-            setStatus('IDLE');
           }
         }
         return;
       }
 
-      // For standard upi:// or app-specific schemes (gpay://, phonepe://)
+      console.log('⚡ [PaymentScreen] Checking if URI can be opened...');
       const canOpen = await Linking.canOpenURL(upiUrl);
+      console.log(`📡 [PaymentScreen] canOpenURL result: ${canOpen}`);
+      
       if (canOpen) {
         setStatus('PENDING');
         await Linking.openURL(upiUrl);
       } else {
-        // Try generic fallback before giving up
-        if (upiUrl !== upiLinks.generic && upiLinks.generic) {
+        const fallback = upiLinks.clean || upiLinks.generic;
+        console.warn(`⚠️ [PaymentScreen] Primary URI blocked, trying fallback: ${fallback}`);
+        if (fallback) {
           setStatus('PENDING');
-          await Linking.openURL(upiLinks.generic);
+          await Linking.openURL(fallback);
         } else {
           Alert.alert('Error', `${appId} is not installed on your device.`);
         }
       }
     } catch (error) {
-      console.error('Payment app redirection error:', error);
+      console.error('🔥 [PaymentScreen] Redirection error:', error);
       Alert.alert('Error', 'Failed to open payment app');
       setStatus('IDLE');
     }

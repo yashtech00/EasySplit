@@ -13,7 +13,10 @@ const initiatePayment = asyncHandler(async (req, res) => {
   const userId = req.userId;
   const { shareId } = req.body;
 
+  console.log(`💰 [PaymentFlow] Initiation started - UserId: ${userId}, ShareId: ${shareId}`);
+
   if (!shareId) {
+    console.error('❌ [PaymentFlow] Validation failed: Share ID is required');
     return sendValidationError(res, 'Share ID is required');
   }
 
@@ -23,26 +26,15 @@ const initiatePayment = asyncHandler(async (req, res) => {
       where: { id: shareId },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            upiId: true
-          }
+          select: { id: true, name: true, upiId: true }
         },
         expense: {
           include: {
             addedBy: {
-              select: {
-                id: true,
-                name: true,
-                upiId: true
-              }
+              select: { id: true, name: true, upiId: true }
             },
             group: {
-              select: {
-                id: true,
-                name: true
-              }
+              select: { id: true, name: true }
             }
           }
         },
@@ -51,32 +43,37 @@ const initiatePayment = asyncHandler(async (req, res) => {
     });
 
     if (!share) {
+      console.error(`❌ [PaymentFlow] Share not found: ${shareId}`);
       return sendNotFound(res, 'Expense share not found');
     }
 
+    console.log(`🔍 [PaymentFlow] Share Details - Title: ${share.expense.title}, Amount: ${share.shareAmount}, Payee: ${share.expense.addedBy.name}`);
+
     // Check if share belongs to current user
     if (share.userId !== userId) {
+      console.error(`❌ [PaymentFlow] Forbidden: Share ${shareId} does not belong to User ${userId}`);
       return sendError(res, 'This share does not belong to you', 403);
     }
 
     // Check if share is already paid
     if (share.isPaid) {
+      console.warn(`⚠️ [PaymentFlow] Conflict: Share ${shareId} is already paid`);
       return sendConflict(res, 'This share is already paid');
     }
 
-    // Check if payee has UPI ID
     const payee = share.expense.addedBy;
     if (!payee.upiId) {
+      console.error(`❌ [PaymentFlow] Payee ${payee.id} has no UPI ID`);
       return sendError(res, 'Payee has not set up UPI ID', 400);
     }
 
+    const transactionRef = generateTransactionRef(shareId);
+    const note = `${share.expense.title} - SplitEasy`;
+
     // Check if payment already exists
     if (share.payment) {
-      // If payment exists but is not paid, return existing payment info
+      console.log(`🔄 [PaymentFlow] Resuming existing payment: ${share.payment.id}`);
       const payment = share.payment;
-      
-      const transactionRef = generateTransactionRef(shareId);
-      const note = `${share.expense.title} - SplitEasy`;
       
       const upiLinks = generateUpiLinks({
         payeeUpiId: payee.upiId,
@@ -89,41 +86,28 @@ const initiatePayment = asyncHandler(async (req, res) => {
       const responseData = {
         paymentId: payment.id,
         shareAmount: share.shareAmount,
-        payee: {
-          id: payee.id,
-          name: payee.name,
-          upiId: payee.upiId
-        },
+        payee: { id: payee.id, name: payee.name, upiId: payee.upiId },
         upiLinks,
         transactionRef,
-        expense: {
-          id: share.expense.id,
-          title: share.expense.title,
-          amount: share.expense.amount
-        }
+        expense: { id: share.expense.id, title: share.expense.title, amount: share.expense.amount }
       };
 
+      console.log('✅ [PaymentFlow] Initiation success (resumed)');
       return sendSuccess(res, responseData, 200, 'Existing payment session resumed');
     }
 
-    // Get payer information
-    const payer = share.user;
-
-    // Create payment record
+    console.log('🆕 [PaymentFlow] Creating new payment record');
     const payment = await prisma.payment.create({
       data: {
         shareId,
         payerId: userId,
         payeeId: payee.id,
         amount: share.shareAmount,
-        status: 'INITIATED'
+        status: 'INITIATED',
+        transactionRef
       }
     });
 
-    // Generate UPI links
-    const transactionRef = generateTransactionRef(shareId);
-    const note = `${share.expense.title} - SplitEasy`;
-    
     const upiLinks = generateUpiLinks({
       payeeUpiId: payee.upiId,
       payeeName: payee.name,
@@ -135,23 +119,16 @@ const initiatePayment = asyncHandler(async (req, res) => {
     const responseData = {
       paymentId: payment.id,
       shareAmount: share.shareAmount,
-      payee: {
-        id: payee.id,
-        name: payee.name,
-        upiId: payee.upiId
-      },
+      payee: { id: payee.id, name: payee.name, upiId: payee.upiId },
       upiLinks,
       transactionRef,
-      expense: {
-        id: share.expense.id,
-        title: share.expense.title,
-        amount: share.expense.amount
-      }
+      expense: { id: share.expense.id, title: share.expense.title, amount: share.expense.amount }
     };
 
+    console.log(`✅ [PaymentFlow] Initiation success - PaymentId: ${payment.id}`);
     return sendSuccess(res, responseData, 201, 'Payment initiated successfully');
   } catch (error) {
-    console.error('Error initiating payment:', error);
+    console.error('🔥 [PaymentFlow] Initiation Error:', error);
     return sendError(res, 'Failed to initiate payment', 500);
   }
 });
