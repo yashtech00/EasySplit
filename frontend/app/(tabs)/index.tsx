@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert } from 'react-native';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { FlatList, RefreshControl, Alert, View as RNView, NativeSyntheticEvent, NativeScrollEvent, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { YStack, XStack, Text, Button, H2, View, Spinner, Avatar } from 'tamagui';
+import { YStack, XStack, Text, Button, H2, View, Spinner, Avatar, useTheme } from 'tamagui';
 import { Plus, Menu, User as UserIcon } from '@tamagui/lucide-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BalanceCard } from '../../components/BalanceCard';
 import { ExpenseCard } from '../../components/ExpenseCard';
 import { getGroupExpenses } from '../../api/expense.service';
 import { getGroupBalance, sendReminder } from '../../api/group.service';
 import { getUserStats } from '../../api/user.service';
 import { useAuthStore } from '../../store/auth.store';
+import { useUIStore } from '../../store/ui.store';
 
 export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,34 @@ export default function HomeScreen() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const { user } = useAuthStore();
   const router = useRouter();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const { isTabBarVisible, setTabBarVisible, isHeaderVisible, setHeaderVisible } = useUIStore();
+  
+  // Calculate dynamic bottom padding and tab bar height to position FAB properly above it
+  const bottomPadding = insets.bottom > 0 ? insets.bottom : (Platform.OS === 'ios' ? 20 : 12);
+  const tabBarHeight = 50 + bottomPadding + 10;
+  const fabBottom = isTabBarVisible 
+    ? tabBarHeight + 20 
+    : (insets.bottom > 0 ? insets.bottom + 15 : 20);
+  
+  const lastScrollY = useRef(0);
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentOffset = event.nativeEvent.contentOffset.y;
+    const direction = currentOffset > lastScrollY.current ? 'down' : 'up';
+    
+    if (Math.abs(currentOffset - lastScrollY.current) > 10) {
+      if (direction === 'down' && currentOffset > 50) {
+        setTabBarVisible(false);
+        setHeaderVisible(false);
+      } else {
+        setTabBarVisible(true);
+        setHeaderVisible(true);
+      }
+      lastScrollY.current = currentOffset;
+    }
+  };
 
   const fetchData = useCallback(async () => {
     if (!user?.groupId) return;
@@ -66,31 +96,43 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <YStack f={1} jc="center" ai="center">
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
         <Spinner size="large" color="$blue10" />
       </YStack>
     );
   }
 
   return (
-    <YStack f={1} bc="$background">
+    <YStack flex={1} backgroundColor="$background" paddingTop={isHeaderVisible ? insets.top : 0}>
       {/* Header */}
-      <XStack p="$4" ai="center" jc="space-between" bc="$background" elevation={1}>
-        <Button circular icon={<Menu size={24} />} bc="transparent" />
-        <H2 size="$6" fontWeight="800" color="$blue10">SplitEasy</H2>
-        <Button 
-          circular 
-          icon={<UserIcon size={24} />} 
-          bc="transparent" 
-          onPress={() => router.push('/profile')}
-        />
-      </XStack>
+      {isHeaderVisible && (
+        <XStack 
+          paddingHorizontal="$4" 
+          paddingVertical="$2"
+          alignItems="center" 
+          justifyContent="space-between" 
+          backgroundColor="$background" 
+          elevation={1}
+          zIndex={10}
+        >
+          <Button circular icon={<Menu size={24} />} backgroundColor="transparent" />
+          <H2 size="$6" fontWeight="800" color="$blue10" textTransform="uppercase">SplitEasy</H2>
+          <Button 
+            circular 
+            icon={<UserIcon size={24} />} 
+            backgroundColor="transparent" 
+            onPress={() => router.push('/profile')}
+          />
+        </XStack>
+      )}
 
       <FlatList
         data={expenses}
         keyExtractor={(item) => item.id}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         renderItem={({ item }) => (
-          <View px="$4" py="$2">
+          <View paddingHorizontal="$4" paddingVertical="$2">
             <ExpenseCard
               title={item.title}
               amount={item.amount}
@@ -105,7 +147,7 @@ export default function HomeScreen() {
           </View>
         )}
         ListHeaderComponent={
-          <YStack p="$4" gap="$6">
+          <YStack padding="$4" gap="$6">
             <BalanceCard
               direction={balance?.netBalance?.direction || 'SETTLED'}
               amount={balance?.netBalance?.amount || 0}
@@ -114,36 +156,37 @@ export default function HomeScreen() {
               onRemind={handleRemind}
               onPress={() => router.push(`/group/${user?.groupId}/balance`)}
             />
-            <XStack jc="space-between" ai="center">
+            <XStack justifyContent="space-between" alignItems="center">
               <Text fontSize="$6" fontWeight="700">Recent Expenses</Text>
-              <Button size="$2" bc="transparent" onPress={onRefresh}>
+              <Button size="$2" backgroundColor="transparent" onPress={onRefresh}>
                 <Text color="$blue10">See All</Text>
               </Button>
             </XStack>
           </YStack>
         }
         ListEmptyComponent={
-          <YStack ai="center" jc="center" p="$10" gap="$4">
+          <YStack alignItems="center" justifyContent="center" padding="$10" gap="$4">
             <Text color="$gray10" fontSize="$5">No expenses yet. Add your first expense!</Text>
           </YStack>
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={{ paddingBottom: 120 }}
+        />
 
       {/* FAB */}
       <Button
         position="absolute"
-        bottom={30}
-        right={30}
+        bottom={fabBottom}
+        right={20}
         size="$6"
         circular
-        bc="$blue10"
+        backgroundColor="$blue10"
         elevation={5}
         icon={<Plus size={32} color="white" />}
         onPress={() => router.push('/expense/add')}
+        zIndex={100}
       />
     </YStack>
   );

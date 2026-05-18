@@ -3,6 +3,7 @@ import { Alert, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner, Avatar, View, Separator } from 'tamagui';
 import { ChevronLeft, User as UserIcon, Mail, CreditCard, LogOut, Trash2, Lock } from '@tamagui/lucide-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { updateProfile } from '../../api/user.service';
 import { useAuthStore } from '../../store/auth.store';
 
@@ -12,6 +13,7 @@ export default function ProfileScreen() {
   const [upiId, setUpiId] = useState(user?.upiId || '');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleSave = async () => {
     if (!name || !upiId) {
@@ -80,8 +82,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <YStack flex={1} backgroundColor="$background">
-      <XStack padding="$4" alignItems="center" marginTop="$4" gap="$4">
+    <YStack flex={1} backgroundColor="$background" paddingTop={insets.top}>
+      <XStack padding="$4" alignItems="center" gap="$4">
         <Button
           circular
           icon={<ChevronLeft size={24} />}

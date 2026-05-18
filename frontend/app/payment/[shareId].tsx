@@ -64,27 +64,30 @@ export default function PaymentScreen() {
   };
 
   const handleSimplePay = async () => {
-    if (!paymentData?.payee?.upiId) return;
-
-    // Simple P2P link as requested: no amount, no ref, no note
-    // User enters amount themselves to avoid bank limits
-    const url = `upi://pay?pa=${paymentData.payee.upiId}&pn=${encodeURIComponent(paymentData.payee.name)}&cu=INR`;
+    // Ultra-simple trigger: just opens any UPI app chooser. 
+    // This is the most reliable way to avoid bank/QR errors.
+    const url = 'upi://pay';
     
-    console.log('🚀 [PaymentScreen] Opening simple UPI link:', url);
+    console.log('🚀 [PaymentScreen] Opening generic UPI app chooser');
 
     try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (!canOpen) {
-        Alert.alert('No UPI app found', 'Please install GPay, PhonePe or Paytm');
-        return;
-      }
-
-      setStatus('PENDING');
+      // We don't set PENDING here anymore because we want the user to click "Mark as Paid" manually
       await Linking.openURL(url);
     } catch (err) {
-      console.error('🔥 [PaymentScreen] Error opening simple pay:', err);
-      Alert.alert('Error', 'Could not open UPI app');
-      setStatus('IDLE');
+      console.error('🔥 [PaymentScreen] Error opening UPI apps:', err);
+      Alert.alert('Error', 'Could not open any UPI apps. Please ensure GPay, PhonePe, or Paytm is installed.');
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    console.log('💸 [PaymentScreen] User clicked Mark as Paid, verifying with backend...');
+    try {
+      await confirmPayment(paymentData.paymentId, 'CONFIRMED');
+      console.log('✅ [PaymentScreen] Payment confirmed by backend');
+      setStatus('SUCCESS');
+    } catch (error: any) {
+      console.error('❌ [PaymentScreen] Confirmation failed:', error.response?.data || error.message);
+      Alert.alert('Error', 'Failed to mark as paid. Please try again.');
     }
   };
 
@@ -133,26 +136,49 @@ export default function PaymentScreen() {
             <Text color="$gray10" fontSize="$4">Amount to Pay</Text>
             <Text fontSize="$9" fontWeight="800" color="$blue11">₹{paymentData.shareAmount}</Text>
           </YStack>
+
+          <Button
+            marginTop="$6"
+            size="$4"
+            backgroundColor="$green10"
+            pressStyle={{ backgroundColor: '$green11', scale: 0.98 }}
+            icon={<CheckCircle2 size={18} color="white" />}
+            onPress={handleMarkAsPaid}
+            width="100%"
+          >
+            <Text color="white" fontWeight="700">MARK AS PAID</Text>
+          </Button>
         </Card>
 
         <YStack width="100%" gap="$4" marginTop="$4">
           <Text fontWeight="700" color="$gray11" textAlign="center">
-            IMPORTANT: ENTER THE AMOUNT MANUALLY
+            MANUAL PAYMENT STEPS
           </Text>
           
           <Button
             size="$6"
             backgroundColor="$blue10"
             pressStyle={{ backgroundColor: '$blue11', scale: 0.98 }}
-            icon={<CreditCard size={24} color="white" />}
+            icon={<Smartphone size={24} color="white" />}
             onPress={handleSimplePay}
           >
-            <Text color="white" fontWeight="800" fontSize="$6">PAY NOW</Text>
+            <Text color="white" fontWeight="800" fontSize="$6">OPEN ANY UPI APP</Text>
           </Button>
 
-          <Text textAlign="center" color="$gray9" fontSize="$3" paddingHorizontal="$4">
-            Tapping PAY NOW will open your default UPI app. Please enter <Text fontWeight="800" color="$blue10">₹{paymentData.shareAmount}</Text> manually in the app to complete payment.
-          </Text>
+          <YStack backgroundColor="$gray2" padding="$4" borderRadius="$4" gap="$2">
+            <Text textAlign="center" color="$gray10" fontSize="$3">
+              1. Open your UPI app (GPay, PhonePe, etc.)
+            </Text>
+            <Text textAlign="center" color="$gray10" fontSize="$3">
+              2. Manually pay to: <Text fontWeight="800" color="$blue10">{paymentData.payee.upiId}</Text>
+            </Text>
+            <Text textAlign="center" color="$gray10" fontSize="$3">
+              3. Enter amount: <Text fontWeight="800" color="$blue10">₹{paymentData.shareAmount}</Text>
+            </Text>
+            <Text textAlign="center" color="$gray10" fontSize="$3">
+              4. Return here and click <Text fontWeight="700" color="$green10">MARK AS PAID</Text>
+            </Text>
+          </YStack>
         </YStack>
 
         <YStack marginTop="auto" padding="$4" backgroundColor="$orange1" borderRadius="$4" borderWidth={1} borderColor="$orange4">

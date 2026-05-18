@@ -6,7 +6,6 @@ import { TamaguiProvider, Theme, YStack, H1, Text, Spinner } from 'tamagui';
 import config from '../tamagui.config';
 import { getUserStats } from '../api/user.service';
 import { Wallet } from '@tamagui/lucide-icons';
-import '@tamagui/native/setup-zeego';
 
 export default function RootLayout() {
   const { token, user, isLoading, loadFromStorage, updateUser } = useAuthStore();

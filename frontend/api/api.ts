@@ -5,7 +5,7 @@ const BASE_URL = 'https://easysplit-qdjv.onrender.com'; // Change to your Railwa
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
-  timeout: 10000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
