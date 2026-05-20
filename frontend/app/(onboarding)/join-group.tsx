@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner } from 'tamagui';
 import { ChevronLeft, ArrowRight } from '@tamagui/lucide-icons';
 import { joinGroup } from '../../api/group.service';
@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/auth.store';
 export default function JoinGroupScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
   const { user, updateUser } = useAuthStore();
 
   const handleJoinGroup = async () => {

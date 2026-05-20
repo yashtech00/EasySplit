@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useSafeRouter } from '../../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner, TextArea } from 'tamagui';
 import { ChevronLeft, Save, Calendar as CalendarIcon, Clock } from '@tamagui/lucide-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -16,7 +17,7 @@ export default function EditExpenseScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
 
   useEffect(() => {
     const fetchDetails = async () => {

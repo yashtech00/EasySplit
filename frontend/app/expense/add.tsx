@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner, TextArea } from 'tamagui';
 import { ChevronLeft, Save, Calendar as CalendarIcon, Clock } from '@tamagui/lucide-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -15,7 +15,7 @@ export default function AddExpenseScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
   const { user } = useAuthStore();
 
   const handleAddExpense = async () => {

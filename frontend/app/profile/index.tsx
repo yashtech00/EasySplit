@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Alert, ScrollView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useState, useEffect } from 'react';
+import { Alert, ScrollView, Platform, BackHandler } from 'react-native';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner, Avatar, View, Separator } from 'tamagui';
 import { ChevronLeft, User as UserIcon, Mail, CreditCard, LogOut, Trash2, Lock } from '@tamagui/lucide-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,8 +12,24 @@ export default function ProfileScreen() {
   const [name, setName] = useState(user?.name || '');
   const [upiId, setUpiId] = useState(user?.upiId || '');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const handleHardwareBack = () => {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
+      return true; // prevent default behavior (exiting the app)
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handleHardwareBack);
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
 
   const handleSave = async () => {
     if (!name || !upiId) {

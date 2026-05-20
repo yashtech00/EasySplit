@@ -110,19 +110,12 @@ export default function HomeScreen() {
           paddingHorizontal="$4" 
           paddingVertical="$2"
           alignItems="center" 
-          justifyContent="space-between" 
+          justifyContent="center" 
           backgroundColor="$background" 
           elevation={1}
           zIndex={10}
         >
-          <Button circular icon={<Menu size={24} />} backgroundColor="transparent" />
-          <H2 size="$6" fontWeight="800" color="$blue10" textTransform="uppercase">SplitEasy</H2>
-          <Button 
-            circular 
-            icon={<UserIcon size={24} />} 
-            backgroundColor="transparent" 
-            onPress={() => router.push('/profile')}
-          />
+        <H2 size="$6" fontWeight="800" color="$blue10" textTransform="uppercase">SplitEasy</H2>
         </XStack>
       )}
 

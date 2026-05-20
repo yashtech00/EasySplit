@@ -1,7 +1,18 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const BASE_URL = 'https://easysplit-qdjv.onrender.com'; // Change to your Railway URL in production
+// Dynamically determine local machine IP for Expo Go development
+const getBaseUrl = () => {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (!hostUri) {
+    return 'https://easysplit-qdjv.onrender.com'; // Production/Fallback URL
+  }
+  const ip = hostUri.split(':')[0];
+  return `http://${ip}:8000`;
+};
+
+const BASE_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/v1`,

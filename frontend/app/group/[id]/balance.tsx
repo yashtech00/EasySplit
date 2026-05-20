@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Alert, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useSafeRouter } from '../../../hooks/use-safe-router';
 import { YStack, XStack, Text, Button, H1, Spinner, Card, Separator } from 'tamagui';
 import { ChevronLeft, Send, BarChart3, TrendingUp, TrendingDown } from '@tamagui/lucide-icons';
 import { getGroupBalance, sendReminder } from '../../../api/group.service';
@@ -11,7 +12,7 @@ export default function BalanceSummaryScreen() {
   const [balance, setBalance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reminding, setReminding] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
   const { user } = useAuthStore();
 
   useEffect(() => {

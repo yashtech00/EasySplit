@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Alert, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Button, H1, Spinner, View, Card } from 'tamagui';
 import { ChevronLeft, MoreVertical, Calendar, Clock, CheckCircle2, Timer } from '@tamagui/lucide-icons';
 import { getExpenseDetails, deleteExpense } from '../../api/expense.service';
@@ -10,7 +11,7 @@ export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [expense, setExpense] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const router = useSafeRouter();
   const { user } = useAuthStore();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner } from 'tamagui';
 import { ChevronLeft, Lock, Save } from '@tamagui/lucide-icons';
 
@@ -9,7 +9,7 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const router = useSafeRouter();
 
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {

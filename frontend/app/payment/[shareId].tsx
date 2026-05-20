@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, AppState, Image, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Button, H1, Spinner, View, Card } from 'tamagui';
 import { ChevronLeft, Smartphone, CheckCircle2, XCircle, CreditCard } from '@tamagui/lucide-icons';
 import { initiatePayment, recordUpiApp, confirmPayment } from '../../api/payment.service';
@@ -11,7 +12,7 @@ export default function PaymentScreen() {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'IDLE' | 'PENDING' | 'SUCCESS' | 'FAILED'>('IDLE');
-  const router = useRouter();
+  const router = useSafeRouter();
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
