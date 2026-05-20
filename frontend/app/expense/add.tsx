@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 import { useSafeRouter } from '../../hooks/use-safe-router';
 import { YStack, XStack, Text, Input, Button, Label, H1, Spinner, TextArea } from 'tamagui';
 import { ChevronLeft, Save, Calendar as CalendarIcon, Clock } from '@tamagui/lucide-icons';
@@ -91,111 +91,162 @@ export default function AddExpenseScreen() {
         </Button>
       </XStack>
 
-      <YStack gap="$4" f={1}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack gap="$5" backgroundColor="white" padding="$5" borderRadius="$8" borderWidth={1} borderColor="$gray3">
+          <YStack gap="$2">
+            <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>TITLE *</Label>
+            <XStack 
+              alignItems="center" 
+              backgroundColor="white" 
+              borderWidth={1}
+              borderColor="$gray4"
+              borderRadius="$6" 
+              px="$3.5"
+              height={52}
+              focusStyle={{ borderColor: '$blue10' }}
+            >
+              <Input
+                flex={1}
+                borderWidth={0}
+                placeholder="e.g. Auto, Lunch"
+                value={title}
+                onChangeText={setTitle}
+                backgroundColor="transparent"
+                fontSize="$4"
+                fontWeight="600"
+                color="$gray12"
+                autoFocus
+              />
+            </XStack>
+          </YStack>
+
         <YStack gap="$2">
-          <Label fontWeight="600" color="$gray11">TITLE *</Label>
-          <Input
-            size="$5"
-            placeholder="e.g. Auto, Lunch"
-            value={title}
-            onChangeText={setTitle}
-            autoFocus
-          />
+          <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>AMOUNT (₹) *</Label>
+          <XStack 
+            alignItems="center" 
+            backgroundColor="white" 
+            borderWidth={1}
+            borderColor="$gray4"
+            borderRadius="$6" 
+            px="$3.5"
+            height={52}
+            focusStyle={{ borderColor: '$blue10' }}
+          >
+            <Text color="$gray9" fontWeight="700" marginRight="$2">₹</Text>
+            <Input
+              flex={1}
+              borderWidth={0}
+              placeholder="0.00"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+              backgroundColor="transparent"
+              fontSize="$4"
+              fontWeight="700"
+              color="$gray12"
+            />
+          </XStack>
         </YStack>
 
         <YStack gap="$2">
-          <Label fontWeight="600" color="$gray11">AMOUNT (₹) *</Label>
-          <Input
-            size="$5"
-            placeholder="0.00"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-          />
-        </YStack>
-
-        <YStack gap="$2">
-          <Label fontWeight="600" color="$gray11">DESCRIPTION (OPTIONAL)</Label>
-          <TextArea
-            size="$5"
-            placeholder="What was this for?"
-            value={description}
-            onChangeText={setDescription}
-            h={100}
-          />
+          <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>DESCRIPTION (OPTIONAL)</Label>
+          <XStack 
+            alignItems="center" 
+            backgroundColor="white" 
+            borderWidth={1}
+            borderColor="$gray4"
+            borderRadius="$6" 
+            px="$3.5"
+            py="$2"
+            height={100}
+            focusStyle={{ borderColor: '$blue10' }}
+          >
+            <TextArea
+              flex={1}
+              borderWidth={0}
+              placeholder="What was this for?"
+              value={description}
+              onChangeText={setDescription}
+              backgroundColor="transparent"
+              fontSize="$4"
+              fontWeight="600"
+              color="$gray12"
+              h="100%"
+            />
+          </XStack>
         </YStack>
 
         <XStack gap="$4">
           <YStack f={1} gap="$2">
-            <Label fontWeight="600" color="$gray11">DATE</Label>
+            <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>DATE</Label>
             <Button
               bc="$gray2"
-              icon={<CalendarIcon size={20} color="$gray9" />}
+              borderWidth={1}
+              borderColor="$gray3"
+              height={48}
+              br="$6"
+              icon={<CalendarIcon size={18} color="$gray9" />}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text color="$gray11">{date.toLocaleDateString('en-IN')}</Text>
+              <Text color="$gray11" fontWeight="600">{date.toLocaleDateString('en-IN')}</Text>
             </Button>
           </YStack>
 
           <YStack f={1} gap="$2">
-            <Label fontWeight="600" color="$gray11">TIME</Label>
+            <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>TIME</Label>
             <Button
               bc="$gray2"
-              icon={<Clock size={20} color="$gray9" />}
+              borderWidth={1}
+              borderColor="$gray3"
+              height={48}
+              br="$6"
+              icon={<Clock size={18} color="$gray9" />}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text color="$gray11">
+              <Text color="$gray11" fontWeight="600">
                 {date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </Button>
           </YStack>
         </XStack>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-          />
-        )}
-
-        {showTimePicker && (
-          <DateTimePicker
-            value={date}
-            mode="time"
-            is24Hour={true}
-            display="default"
-            onChange={onTimeChange}
-          />
-        )}
-
-        <YStack mt="$4" p="$4" bc="$blue1" br="$4" gap="$2">
-          <Text fontWeight="700" color="$blue10">Split Details</Text>
-          <Text color="$gray11">✓ Equal split (₹{(parseFloat(amount) || 0) / 2} each)</Text>
-          <XStack jc="space-between" mt="$2">
-            <Text color="$gray10">Your share:</Text>
-            <Text fontWeight="600">₹{(parseFloat(amount) || 0) / 2} [✓ Paid]</Text>
+        <YStack mt="$2" p="$4" bc="$blue1" br="$6" bw={1} boc="$blue3" gap="$2.5">
+          <Text fontWeight="800" color="$blue10" fontSize="$2.5" letterSpacing={0.5} textTransform="uppercase">Split Details</Text>
+          <Text color="$gray12" fontWeight="700" fontSize="$3.5">✓ Equal split (₹{(parseFloat(amount) || 0) / 2} each)</Text>
+          <XStack jc="space-between" mt="$1">
+            <Text color="$gray7" fontWeight="600">Your share:</Text>
+            <XStack bc="$green2" px="$2" py="$0.5" br="$3">
+              <Text fontWeight="700" color="$green11" fontSize="$2">₹{(parseFloat(amount) || 0) / 2} • PAID</Text>
+            </XStack>
           </XStack>
           <XStack jc="space-between">
-            <Text color="$gray10">Friend's share:</Text>
-            <Text fontWeight="600" color="$orange10">₹{(parseFloat(amount) || 0) / 2} [⏳ Pending]</Text>
+            <Text color="$gray7" fontWeight="600">Friend's share:</Text>
+            <XStack bc="$orange2" px="$2" py="$0.5" br="$3">
+              <Text fontWeight="700" color="$orange11" fontSize="$2">₹{(parseFloat(amount) || 0) / 2} • PENDING</Text>
+            </XStack>
           </XStack>
         </YStack>
 
-        <Button
-          mt="auto"
-          size="$5"
-          bc="$blue10"
-          onPress={handleAddExpense}
-          disabled={loading}
-          iconAfter={loading ? <Spinner color="white" /> : <Save color="white" />}
-        >
-          <Text color="white" fontWeight="600" fontSize="$5">
-            {loading ? 'Adding...' : 'ADD EXPENSE'}
-          </Text>
-        </Button>
-      </YStack>
+          <Button
+            size="$5"
+            bc="$blue10"
+            hoverStyle={{ backgroundColor: '$blue11' }}
+            pressStyle={{ backgroundColor: '$blue9', scale: 0.98 }}
+            onPress={handleAddExpense}
+            disabled={loading}
+            br="$9"
+            iconAfter={loading ? <Spinner color="white" /> : <Save color="white" />}
+          >
+            <Text color="white" fontWeight="700" letterSpacing={0.5}>
+              {loading ? 'ADDING...' : 'ADD EXPENSE'}
+            </Text>
+          </Button>
+        </YStack>
+      </ScrollView>
     </YStack>
   );
 }

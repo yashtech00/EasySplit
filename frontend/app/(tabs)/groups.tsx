@@ -87,28 +87,39 @@ export default function GroupsScreen() {
           <View paddingHorizontal="$4" paddingVertical="$2">
             <Card
               padding="$4"
-              borderRadius="$6"
-              elevation={1}
-              backgroundColor="$background"
+              borderRadius="$8"
+              borderWidth={1}
+              borderColor="$gray3"
+              backgroundColor="white"
+              elevation={0}
               onPress={() => {
                 updateUser({ groupId: item.id, hasGroup: true });
                 router.push('/');
               }}
-              pressStyle={{ scale: 0.98 }}
+              pressStyle={{ scale: 0.98, backgroundColor: '$gray2' }}
+              hoverStyle={{ borderColor: '$blue4' }}
             >
               <XStack justifyContent="space-between" alignItems="center">
                 <XStack gap="$4" alignItems="center">
-                  <YStack backgroundColor="$blue4" padding="$3" borderRadius="$5">
-                    <UsersIcon size={24} color="$blue10" />
+                  <YStack backgroundColor="$blue2" padding="$3.5" borderRadius="$9" width={52} height={52} alignItems="center" justifyContent="center">
+                    <UsersIcon size={22} color="$blue10" />
                   </YStack>
-                  <YStack>
-                    <Text fontSize="$5" fontWeight="700">{item.name}</Text>
+                  <YStack gap="$1">
+                    <Text fontSize="$4.5" fontWeight="700" color="$gray12">{item.name}</Text>
                     <XStack alignItems="center" gap="$2">
-                      <Text fontSize="$3" color="$gray10">{item.membersCount} members</Text>
-                      <Text fontSize="$3" color="$gray8">•</Text>
-                      <XStack alignItems="center" gap="$1" onPress={() => handleCopy(item.inviteCode)}>
-                        <Text fontSize="$3" color="$blue10" fontWeight="600">{item.inviteCode}</Text>
-                        <Copy size={12} color="$blue10" />
+                      <Text fontSize="$2.5" color="$gray6" fontWeight="500">{item.membersCount} members</Text>
+                      <Text fontSize="$2.5" color="$gray4">•</Text>
+                      <XStack 
+                        alignItems="center" 
+                        gap="$1" 
+                        onPress={() => handleCopy(item.inviteCode)}
+                        bc="$blue1"
+                        px="$2"
+                        py="$0.5"
+                        br="$3"
+                      >
+                        <Text fontSize="$2.5" color="$blue10" fontWeight="700">{item.inviteCode}</Text>
+                        <Copy size={10} color="$blue10" />
                       </XStack>
                     </XStack>
                   </YStack>

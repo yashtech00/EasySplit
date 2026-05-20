@@ -101,55 +101,63 @@ export default function ExpenseDetailScreen() {
             </XStack>
           </YStack>
 
-          <Card p="$8" br="$8" elevation={2} ai="center">
-            <Text color="$gray10" fontSize="$4">Total Amount</Text>
-            <Text fontSize="$9" fontWeight="800" color="$blue10">₹{expense.amount}</Text>
+          <Card 
+            p="$6" 
+            br="$8" 
+            bw={1}
+            boc="$gray3"
+            bc="white" 
+            elevation={0} 
+            ai="center"
+          >
+            <Text color="$gray10" fontSize="$2.5" fontWeight="700" textTransform="uppercase" letterSpacing={0.5}>Total Amount</Text>
+            <Text fontSize="$9" fontWeight="900" color="$blue10" mt="$1">₹{expense.amount}</Text>
           </Card>
 
           {expense.description && (
-            <YStack gap="$2">
-              <Text fontWeight="700" color="$gray11">Description</Text>
-              <Text color="$gray10">{expense.description}</Text>
+            <YStack gap="$2" backgroundColor="white" p="$4" br="$6" bw={1} boc="$gray3">
+              <Text fontWeight="800" color="$gray12" fontSize="$2" textTransform="uppercase" letterSpacing={0.5}>Description</Text>
+              <Text color="$gray10" fontSize="$4" fontWeight="500">{expense.description}</Text>
             </YStack>
           )}
 
           <YStack gap="$4">
-            <Text fontWeight="700" color="$gray11">Split Details</Text>
+            <Text fontWeight="800" color="$gray11" fontSize="$2.5" textTransform="uppercase" letterSpacing={0.5}>Split Details</Text>
             
             {/* Current User Share */}
-            <XStack jc="space-between" ai="center" p="$4" bc="$gray2" br="$4">
-              <YStack>
-                <Text fontWeight="600">{isPayer ? 'You (Paid)' : 'You'}</Text>
-                <Text color="$gray10">Share: ₹{myShare.shareAmount}</Text>
+            <XStack jc="space-between" ai="center" p="$4" bc="white" br="$8" bw={1} boc="$gray3">
+              <YStack gap="$1">
+                <Text fontWeight="700" color="$gray12" fontSize="$4">{isPayer ? 'You (Paid)' : 'You'}</Text>
+                <Text color="$gray6" fontWeight="600" fontSize="$2.5">Share: ₹{myShare.shareAmount}</Text>
               </YStack>
               {myShare.isPaid ? (
-                <XStack ai="center" gap="$1">
-                  <CheckCircle2 size={16} color="$green10" />
-                  <Text color="$green10" fontWeight="600">Paid</Text>
+                <XStack ai="center" gap="$1" bc="$green2" px="$2.5" py="$1" br="$4">
+                  <CheckCircle2 size={14} color="$green11" />
+                  <Text color="$green11" fontWeight="700" fontSize="$1" textTransform="uppercase" letterSpacing={0.5}>Paid</Text>
                 </XStack>
               ) : (
-                <XStack ai="center" gap="$1">
-                  <Timer size={16} color="$orange10" />
-                  <Text color="$orange10" fontWeight="600">Pending</Text>
+                <XStack ai="center" gap="$1" bc="$orange2" px="$2.5" py="$1" br="$4">
+                  <Timer size={14} color="$orange11" />
+                  <Text color="$orange11" fontWeight="700" fontSize="$1" textTransform="uppercase" letterSpacing={0.5}>Pending</Text>
                 </XStack>
               )}
             </XStack>
 
             {/* Other User Share */}
-            <XStack jc="space-between" ai="center" p="$4" bc="$gray2" br="$4">
-              <YStack>
-                <Text fontWeight="600">{otherShare.user.name}</Text>
-                <Text color="$gray10">Share: ₹{otherShare.shareAmount}</Text>
+            <XStack jc="space-between" ai="center" p="$4" bc="white" br="$8" bw={1} boc="$gray3">
+              <YStack gap="$1">
+                <Text fontWeight="700" color="$gray12" fontSize="$4">{otherShare.user.name}</Text>
+                <Text color="$gray6" fontWeight="600" fontSize="$2.5">Share: ₹{otherShare.shareAmount}</Text>
               </YStack>
               {otherShare.isPaid ? (
-                <XStack ai="center" gap="$1">
-                  <CheckCircle2 size={16} color="$green10" />
-                  <Text color="$green10" fontWeight="600">Paid</Text>
+                <XStack ai="center" gap="$1" bc="$green2" px="$2.5" py="$1" br="$4">
+                  <CheckCircle2 size={14} color="$green11" />
+                  <Text color="$green11" fontWeight="700" fontSize="$1" textTransform="uppercase" letterSpacing={0.5}>Paid</Text>
                 </XStack>
               ) : (
-                <XStack ai="center" gap="$1">
-                  <Timer size={16} color="$orange10" />
-                  <Text color="$orange10" fontWeight="600">Pending</Text>
+                <XStack ai="center" gap="$1" bc="$orange2" px="$2.5" py="$1" br="$4">
+                  <Timer size={14} color="$orange11" />
+                  <Text color="$orange11" fontWeight="700" fontSize="$1" textTransform="uppercase" letterSpacing={0.5}>Pending</Text>
                 </XStack>
               )}
             </XStack>
@@ -159,9 +167,12 @@ export default function ExpenseDetailScreen() {
             <Button
               size="$5"
               bc="$blue10"
+              hoverStyle={{ backgroundColor: '$blue11' }}
+              pressStyle={{ backgroundColor: '$blue9', scale: 0.98 }}
               onPress={() => router.push(`/payment/${myShare.id}`)}
+              br="$9"
             >
-              <Text color="white" fontWeight="700">PAY ₹{myShare.shareAmount}</Text>
+              <Text color="white" fontWeight="700" letterSpacing={0.5}>PAY ₹{myShare.shareAmount}</Text>
             </Button>
           )}
 
@@ -169,9 +180,12 @@ export default function ExpenseDetailScreen() {
             <Button
               size="$5"
               bc="$blue10"
+              hoverStyle={{ backgroundColor: '$blue11' }}
+              pressStyle={{ backgroundColor: '$blue9', scale: 0.98 }}
               onPress={() => Alert.alert('Reminder', 'Reminder sent!')}
+              br="$9"
             >
-              <Text color="white" fontWeight="700">SEND REMINDER</Text>
+              <Text color="white" fontWeight="700" letterSpacing={0.5}>SEND PAYMENT REMINDER</Text>
             </Button>
           )}
         </YStack>

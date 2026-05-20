@@ -78,35 +78,57 @@ export default function ActivityScreen() {
           const isPayer = item.payer.id === user?.id;
           return (
             <View paddingHorizontal="$4" paddingVertical="$2">
-              <Card padding="$4" borderRadius="$6" elevation={1} backgroundColor="$background">
-                <XStack justifyContent="space-between" alignItems="center">
-                  <XStack gap="$4" alignItems="center">
-                    <YStack backgroundColor={isPayer ? '$red2' : '$green2'} padding="$3" borderRadius="$5">
+              <Card 
+                padding="$4" 
+                borderRadius="$8" 
+                borderWidth={1}
+                borderColor="$gray3"
+                backgroundColor="white"
+                elevation={0}
+              >
+                <XStack justifyContent="space-between" alignItems="center" gap="$3">
+                  <XStack gap="$4" alignItems="center" f={1}>
+                    <YStack 
+                      backgroundColor={isPayer ? '$red2' : '$green2'} 
+                      padding="$3" 
+                      borderRadius="$9"
+                      width={52}
+                      height={52}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
                       {isPayer ? (
-                        <ArrowUpRight size={24} color="$red10" />
+                        <ArrowUpRight size={22} color="$red11" />
                       ) : (
-                        <ArrowDownLeft size={24} color="$green10" />
+                        <ArrowDownLeft size={22} color="$green11" />
                       )}
                     </YStack>
-                    <YStack>
-                      <Text fontSize="$4" fontWeight="700">
+                    <YStack gap="$0.5" f={1}>
+                      <Text fontSize="$4" fontWeight="700" color="$gray12" numberOfLines={1}>
                         {isPayer ? `Paid to ${item.payee.name}` : `Received from ${item.payer.name}`}
                       </Text>
-                      <Text fontSize="$3" color="$gray10">{item.share.expense.title}</Text>
-                      <Text fontSize="$2" color="$gray8">
-                        {new Date(item.confirmedAt || item.initiatedAt).toLocaleDateString()}
+                      <Text fontSize="$2.5" color="$gray6" fontWeight="600">{item.share.expense.title}</Text>
+                      <Text fontSize="$2" color="$gray5" fontWeight="500">
+                        {new Date(item.confirmedAt || item.initiatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </Text>
                     </YStack>
                   </XStack>
-                  <YStack alignItems="flex-end" gap="$2">
-                    <Text fontSize="$5" fontWeight="800" color={isPayer ? '$red10' : '$green10'}>
+                  <YStack alignItems="flex-end" gap="$1.5" jc="center">
+                    <Text fontSize="$5" fontWeight="800" color={isPayer ? '$red11' : '$green11'}>
                       {isPayer ? '-' : '+'}₹{item.amount}
                     </Text>
-                    <View backgroundColor={item.status === 'CONFIRMED' ? '$green4' : '$orange4'} paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
-                      <Text fontSize="$1" fontWeight="700" color={item.status === 'CONFIRMED' ? '$green10' : '$orange10'}>
+                    <XStack 
+                      backgroundColor={item.status === 'CONFIRMED' ? '$green2' : '$orange2'} 
+                      px="$2.5" 
+                      py="$1" 
+                      borderRadius="$4"
+                      ai="center"
+                      jc="center"
+                    >
+                      <Text fontSize="$1" fontWeight="800" color={item.status === 'CONFIRMED' ? '$green11' : '$orange11'} letterSpacing={0.5}>
                         {item.status}
                       </Text>
-                    </View>
+                    </XStack>
                   </YStack>
                 </XStack>
               </Card>

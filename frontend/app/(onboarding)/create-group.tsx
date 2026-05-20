@@ -45,28 +45,48 @@ export default function CreateGroupScreen() {
         <H1 size="$7">Create Group</H1>
       </XStack>
 
-      <YStack gap="$6" mt="$4">
-        <YStack gap="$2">
-          <Label fontWeight="600" color="$gray11">GROUP NAME</Label>
-          <Input
-            size="$5"
-            placeholder="e.g. Roommates"
-            value={name}
-            onChangeText={setName}
-            autoFocus
-          />
-          <Text color="$gray10" fontSize="$3">Example: "Me & Sarah", "Roommates"</Text>
+      <YStack gap="$5" mt="$4" backgroundColor="white" padding="$6" borderRadius="$8" borderWidth={1} borderColor="$gray3">
+        <YStack gap="$2.5">
+          <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>GROUP NAME</Label>
+          <XStack 
+            alignItems="center" 
+            backgroundColor="white" 
+            borderWidth={1}
+            borderColor="$gray4"
+            borderRadius="$6" 
+            px="$3.5"
+            height={52}
+            focusStyle={{ borderColor: '$blue10' }}
+          >
+            <Input
+              flex={1}
+              borderWidth={0}
+              placeholder="e.g. Roommates"
+              value={name}
+              onChangeText={setName}
+              backgroundColor="transparent"
+              fontSize="$4"
+              fontWeight="600"
+              color="$gray12"
+              autoFocus
+            />
+          </XStack>
+          <Text color="$gray9" fontSize="$2.5" fontWeight="500">Example: "Me & Sarah", "Roommates"</Text>
         </YStack>
 
         <Button
           size="$5"
           bc="$blue10"
+          hoverStyle={{ backgroundColor: '$blue11' }}
+          pressStyle={{ backgroundColor: '$blue9', scale: 0.98 }}
           onPress={handleCreateGroup}
           disabled={loading}
+          br="$9"
           iconAfter={loading ? <Spinner color="white" /> : <ArrowRight color="white" />}
+          marginTop="$2"
         >
-          <Text color="white" fontWeight="600" fontSize="$5">
-            {loading ? 'Creating...' : 'CREATE GROUP'}
+          <Text color="white" fontWeight="700" fontSize="$4" letterSpacing={0.5}>
+            {loading ? 'CREATING...' : 'CREATE GROUP'}
           </Text>
         </Button>
       </YStack>

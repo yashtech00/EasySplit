@@ -122,12 +122,21 @@ export default function ProfileScreen() {
             <Text color="$gray10">{user?.mobile}</Text>
           </YStack>
 
-          <YStack gap="$4">
-            <Text fontWeight="700" color="$gray11">Account Details</Text>
+          <YStack gap="$5" backgroundColor="white" padding="$5" borderRadius="$8" borderWidth={1} borderColor="$gray3">
+            <Text fontWeight="800" color="$gray12" fontSize="$4" letterSpacing={0.5} textTransform="uppercase">Account Details</Text>
             
             <YStack gap="$2">
-              <Label fontWeight="600" color="$gray11">NAME</Label>
-              <XStack alignItems="center" backgroundColor="$gray2" borderRadius="$4" paddingHorizontal="$3">
+              <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>NAME</Label>
+              <XStack 
+                alignItems="center" 
+                backgroundColor="white" 
+                borderWidth={1}
+                borderColor="$gray4"
+                borderRadius="$6" 
+                paddingHorizontal="$3.5"
+                height={52}
+                focusStyle={{ borderColor: '$blue10' }}
+              >
                 <UserIcon size={20} color="$gray9" />
                 <Input
                   flex={1}
@@ -135,13 +144,25 @@ export default function ProfileScreen() {
                   value={name}
                   onChangeText={setName}
                   backgroundColor="transparent"
+                  fontSize="$4"
+                  fontWeight="600"
+                  color="$gray12"
                 />
               </XStack>
             </YStack>
 
             <YStack gap="$2">
-              <Label fontWeight="600" color="$gray11">UPI ID</Label>
-              <XStack alignItems="center" backgroundColor="$gray2" borderRadius="$4" paddingHorizontal="$3">
+              <Label fontWeight="700" color="$gray11" fontSize="$2" letterSpacing={0.5}>UPI ID</Label>
+              <XStack 
+                alignItems="center" 
+                backgroundColor="white" 
+                borderWidth={1}
+                borderColor="$gray4"
+                borderRadius="$6" 
+                paddingHorizontal="$3.5"
+                height={52}
+                focusStyle={{ borderColor: '$blue10' }}
+              >
                 <CreditCard size={20} color="$gray9" />
                 <Input
                   flex={1}
@@ -149,6 +170,9 @@ export default function ProfileScreen() {
                   value={upiId}
                   onChangeText={setUpiId}
                   backgroundColor="transparent"
+                  fontSize="$4"
+                  fontWeight="600"
+                  color="$gray12"
                 />
               </XStack>
             </YStack>
@@ -156,37 +180,43 @@ export default function ProfileScreen() {
             <Button
               size="$5"
               backgroundColor="$blue10"
+              hoverStyle={{ backgroundColor: '$blue11' }}
+              pressStyle={{ backgroundColor: '$blue9', scale: 0.98 }}
               onPress={handleSave}
               disabled={loading}
+              br="$9"
               iconAfter={loading ? <Spinner color="white" /> : null}
+              marginTop="$2"
             >
-              <Text color="white" fontWeight="700">SAVE CHANGES</Text>
+              <Text color="white" fontWeight="700" letterSpacing={0.5}>SAVE CHANGES</Text>
             </Button>
           </YStack>
 
-          <Separator />
-
-          <YStack gap="$4">
-            <Text fontWeight="700" color="$red10">Danger Zone</Text>
+          <YStack gap="$4" backgroundColor="white" padding="$5" borderRadius="$8" borderWidth={1} borderColor="$gray3">
+            <Text fontWeight="800" color="$red11" fontSize="$4" letterSpacing={0.5} textTransform="uppercase">Danger Zone</Text>
             <Button
               backgroundColor="$red2"
               pressStyle={{ backgroundColor: '$red3', scale: 0.98 }}
               hoverStyle={{ backgroundColor: '$red3' }}
-              justifyContent="flex-start"
-              icon={<LogOut size={20} color="$red10" />}
+              justifyContent="center"
+              icon={<LogOut size={20} color="$red11" />}
               onPress={handleLogout}
+              br="$9"
+              height={48}
             >
-              <Text color="$red10" fontWeight="600">Logout</Text>
+              <Text color="$red11" fontWeight="700" letterSpacing={0.5}>LOG OUT</Text>
             </Button>
             <Button
               backgroundColor="$red2"
               pressStyle={{ backgroundColor: '$red3', scale: 0.98 }}
               hoverStyle={{ backgroundColor: '$red3' }}
-              justifyContent="flex-start"
-              icon={<LogOut size={20} color="$red10" />}
+              justifyContent="center"
+              icon={<LogOut size={20} color="$red11" />}
               onPress={handleLogoutAll}
+              br="$9"
+              height={48}
             >
-              <Text color="$red10" fontWeight="600">Logout From All Devices</Text>
+              <Text color="$red11" fontWeight="700" letterSpacing={0.5}>LOG OUT FROM ALL DEVICES</Text>
             </Button>
           </YStack>
         </YStack>

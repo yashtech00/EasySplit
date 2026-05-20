@@ -19,37 +19,63 @@ const getIcon = (title: string) => {
   return <ShoppingBag size={24} color="$gray10" />;
 };
 
-export function ExpenseCard({ title, amount, date, shareStatus, shareAmount, onPress }: ExpenseCardProps) {
-  const getStatusColor = () => {
-    if (shareStatus === 'OWES_YOU') return '$green10';
-    if (shareStatus === 'YOU_OWE') return '$red10';
-    return '$gray10';
+export default function ExpenseCard({ title, amount, date, shareStatus, shareAmount, onPress }: ExpenseCardProps) {
+  const getBadgeStyle = () => {
+    if (shareStatus === 'OWES_YOU') {
+      return {
+        bg: '$green2',
+        color: '$green11',
+        text: `You get ₹${shareAmount}`,
+      };
+    }
+    if (shareStatus === 'YOU_OWE') {
+      return {
+        bg: '$red2',
+        color: '$red11',
+        text: `You owe ₹${shareAmount}`,
+      };
+    }
+    return {
+      bg: '$gray2',
+      color: '$gray7',
+      text: 'Settled ✅',
+    };
   };
 
-  const getStatusText = () => {
-    if (shareStatus === 'OWES_YOU') return `Friend owes you ₹${shareAmount}`;
-    if (shareStatus === 'YOU_OWE') return `You owe ₹${shareAmount}`;
-    return 'All settled ✅';
-  };
+  const badge = getBadgeStyle();
 
   return (
-    <Card p="$4" br="$6" elevation={1} bc="$background" onPress={onPress} pressStyle={{ scale: 0.98 }}>
-      <XStack jc="space-between" ai="center">
-        <XStack gap="$4" f={1}>
-          <YStack bc="$gray2" p="$3" br="$5">
+    <Card 
+      p="$4" 
+      br="$8" 
+      bw={1}
+      boc="$gray3" 
+      bc="white" 
+      elevation={0}
+      onPress={onPress} 
+      pressStyle={{ scale: 0.98, bc: '$gray2' }}
+      hoverStyle={{ boc: '$blue4' }}
+    >
+      <XStack jc="space-between" ai="center" gap="$3">
+        <XStack gap="$4" f={1} ai="center">
+          <YStack bc="$gray2" p="$3.5" br="$9" ai="center" jc="center" width={52} height={52}>
             {getIcon(title)}
           </YStack>
-          <YStack jc="center">
-            <Text fontSize="$5" fontWeight="700">{title}</Text>
-            <Text fontSize="$3" color="$gray10">{new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+          <YStack jc="center" gap="$1" f={1}>
+            <Text fontSize="$4" fontWeight="700" color="$gray12" numberOfLines={1}>{title}</Text>
+            <Text fontSize="$2" fontWeight="500" color="$gray6">
+              {new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+            </Text>
           </YStack>
         </XStack>
 
-        <YStack ai="flex-end">
-          <Text fontSize="$5" fontWeight="700">₹{amount}</Text>
-          <Text fontSize="$2" fontWeight="600" color={getStatusColor()}>
-            {getStatusText()}
-          </Text>
+        <YStack ai="flex-end" gap="$2" jc="center">
+          <Text fontSize="$5" fontWeight="800" color="$gray12">₹{amount}</Text>
+          <XStack bc={badge.bg} px="$2.5" py="$1" br="$4" ai="center" jc="center">
+            <Text fontSize="$1" fontWeight="700" color={badge.color} textTransform="uppercase" letterSpacing={0.5}>
+              {badge.text}
+            </Text>
+          </XStack>
         </YStack>
       </XStack>
     </Card>
